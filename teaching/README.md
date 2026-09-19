@@ -7,6 +7,10 @@ figures and instructor notes in native LaTeX Beamer.
 
 Instructor: **Yi Ching (David) Chou**.
 
+All compiled PDFs are included below, ready to read or download. You do not need
+LaTeX to use the teaching material. Building is only needed after editing the
+slide sources.
+
 | Lecture | Topic | Slides | Source |
 |---|---|---|---|
 | 01 | [Satellite Network Architecture](lecture-01/README.md) | [PDF](lecture-01/lecture-01.pdf) | [TeX](lecture-01/main.tex) |

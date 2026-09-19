@@ -64,24 +64,27 @@ Already have a recording? Open [the standalone player](web/demo/index.html) loca
 and import your JSON file. To add playback to a website, see the
 [embedding guide](docs/API.md#embedding) and [two-player example](web/demo/two-players.html).
 
-## Learn satellite networking
+## Teaching modules
 
-Follow a [five-lecture introduction](teaching/README.md), with worked examples,
-editable LaTeX Beamer diagrams, and companion Python experiments. Each English
-lecture has ten slides, from architecture through an independent network study.
+Learn satellite networking through five lectures and a hands-on simulator lab.
+Every module contains ten English slides. **Click a title below to open its
+compiled PDF directly.** All PDFs are included in this repository and ready to
+read or download, with no LaTeX installation or compilation needed.
 
-| Lecture | Slides | Source |
-|---|---|---|
-| 01. Satellite Network Architecture | [PDF](teaching/lecture-01/lecture-01.pdf) | [TeX](teaching/lecture-01/main.tex) |
-| 02. Orbits, Constellations, and Coverage | [PDF](teaching/lecture-02/lecture-02.pdf) | [TeX](teaching/lecture-02/main.tex) |
-| 03. Links, Topology, and Routing | [PDF](teaching/lecture-03/lecture-03.pdf) | [TeX](teaching/lecture-03/main.tex) |
-| 04. Dynamics, Handover, and Performance | [PDF](teaching/lecture-04/lecture-04.pdf) | [TeX](teaching/lecture-04/main.tex) |
-| 05. Designing and Evaluating Satellite Networks | [PDF](teaching/lecture-05/lecture-05.pdf) | [TeX](teaching/lecture-05/main.tex) |
+| Module | Slides (PDF) |
+|---|---|
+| Lecture 01 | [Satellite Network Architecture](teaching/lecture-01/lecture-01.pdf) |
+| Lecture 02 | [Orbits, Constellations, and Coverage](teaching/lecture-02/lecture-02.pdf) |
+| Lecture 03 | [Links, Topology, and Routing](teaching/lecture-03/lecture-03.pdf) |
+| Lecture 04 | [Dynamics, Handover, and Performance](teaching/lecture-04/lecture-04.pdf) |
+| Lecture 05 | [Designing and Evaluating Satellite Networks](teaching/lecture-05/lecture-05.pdf) |
+| Lab 01 | [Experiments with SatNet Edu](teaching/lab-01/lab-01.pdf) |
 
-Put the concepts into practice with [Lab 01: Experiments with SatNet Edu](teaching/lab-01/README.md).
-The [ten-slide lab](teaching/lab-01/lab-01.pdf) and
-[runnable Python script](teaching/lab-01/experiment.py) guide students from
-installation to a recorded Vancouver–Tokyo failure comparison.
+The [lab setup guide](teaching/lab-01/README.md) and
+[runnable Python script](teaching/lab-01/experiment.py) take students from
+installation to a recorded Vancouver–Tokyo failure comparison. For editable
+Beamer sources, instructor notes, and companion experiments, see the
+[course guide](teaching/README.md).
 
 ## Documentation
 
