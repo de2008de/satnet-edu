@@ -1,0 +1,426 @@
+% Native Beamer teaching slides. Build with teaching/make.cmd lecture-02.
+\newif\ifstudenthandout
+\studenthandouttrue
+\ifstudenthandout
+  \documentclass[aspectratio=169,11pt,handout,t]{beamer}
+\else
+  \documentclass[aspectratio=169,11pt,t]{beamer}
+\fi
+\makeatletter
+\def\input@path{{../}}
+\makeatother
+\usepackage{satnetslides}
+\input{../lecture-01/icons.tex}
+\setlecture{02}{Orbits, Constellations, and Coverage}
+\title{Orbits, Constellations, and Coverage}
+\author{Yi Ching (David) Chou}
+\date{}
+\pgfplotsset{orbitaxis/.style={
+  width=6.7cm,height=3.55cm,
+  label style={font=\scriptsize},tick label style={font=\scriptsize},
+  axis line style={draw=Muted},tick style={draw=Muted},
+  grid=major,grid style={Line,line width=0.25pt},
+  legend style={font=\scriptsize,draw=none,fill=none},
+  unbounded coords=jump}}
+
+\begin{document}
+
+% 1. Cover.
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Paper] (current page.south west) rectangle (current page.north east);
+    \fill[Line] (current page.south west) rectangle ([yshift=0.18cm]current page.south east);
+    \fill[Ink] ([xshift=0.95cm,yshift=-0.95cm]current page.north west) rectangle ++(0.12cm,-5.35cm);
+    \node[anchor=north west,text=Muted] at ([xshift=1.35cm,yshift=-0.9cm]current page.north west)
+      {\small\bfseries SATNET EDU / Lecture 02};
+    \node[anchor=north west,align=left,text width=12.2cm]
+      at ([xshift=1.35cm,yshift=-1.65cm]current page.north west)
+      {{\fontsize{29}{33}\selectfont\bfseries Orbits, Constellations,\\[0.12cm]and Coverage}};
+    \node[anchor=north west,align=left,text width=11.6cm,text=Muted]
+      at ([xshift=1.38cm,yshift=-3.85cm]current page.north west)
+      {\small How satellite motion determines where and when access is possible.};
+    \node[anchor=north west,fill=Ink,rounded corners=2pt,inner xsep=0.18cm,inner ysep=0.09cm,text=Paper]
+      (tag) at ([xshift=1.38cm,yshift=-4.78cm]current page.north west)
+      {\small\bfseries LECTURE 02};
+    \node[anchor=west,align=left,text width=9.5cm] at ([xshift=0.28cm]tag.east)
+      {\small From one moving satellite to coverage over time};
+    \draw[Ink,line width=1.1pt] ([xshift=1.38cm,yshift=-5.55cm]current page.north west) -- ++(10.9cm,0);
+    \node[anchor=north,align=center,text=Muted] at ([yshift=-5.85cm]current page.north)
+      {\small Predict the motion. Construct the constellation. Check the coverage.};
+    \node[anchor=north,align=center] at ([yshift=-6.65cm]current page.north)
+      {\small Instructor: Yi Ching (David) Chou};
+  \end{tikzpicture}
+\end{frame}
+
+% 2. Altitude determines speed and period in a circular orbit.
+\begin{frame}{Altitude Sets the Pace of a Circular Orbit}
+  \context{A satellite keeps moving while gravity bends its trajectory around Earth.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Gravity bends the path.}{
+          \item Velocity points along the orbit. Gravity pulls toward Earth's center, continuously changing the direction of motion.}
+        \point{Use distance from Earth's center.}{
+          \item Orbital radius is $r=R+h$, where $R$ is Earth's radius and $h$ is altitude. Altitude alone is not the orbital radius.}
+        \point{Higher circular orbits take longer.}{
+          \item A larger circumference and lower speed mean fewer revolutions per day.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Motion along the orbit, gravity inward}
+      \begin{tikzpicture}[scale=0.88,transform shape]
+        \path[use as bounding box] (-0.3,-0.15) rectangle (6.7,2.9);
+        \filldraw[fill=Soft,draw=Muted] (1.65,1.35) circle (0.65);
+        \draw[net] (1.65,1.35) circle (1.24);
+        \fill[Ink] (1.65,1.35) circle (0.025);
+        \node[lab] at (1.65,1.35) {Earth};
+        \pic[scale=0.70] at (1.65,2.58) {satellite};
+        \draw[flow,line width=0.9pt] (1.10,2.60) -- (0.05,2.60);
+        \node[lab,below] at (0.40,2.54) {$v$};
+        \draw[flow] (1.65,2.35) -- (1.65,2.02);
+        \node[smalllab,anchor=west] at (1.9,2.20) {Gravity};
+        \draw[faint] (1.65,1.35) -- (2.76,0.80) node[midway,lab,below] {$r$};
+        \node[lab,align=left,anchor=west] at (3.42,1.93) {$v=\sqrt{\mu/r}$\\[7pt]$T=2\pi\sqrt{r^3/\mu}$};
+        \node[smalllab,align=left,anchor=west,text=Muted] at (3.42,0.73) {$v$: orbital speed\\$T$: orbit period\\$\mu$: Earth's gravity parameter};
+      \end{tikzpicture}
+      \par\vspace{0.12cm}
+      {\scriptsize\renewcommand{\arraystretch}{1.15}
+      \begin{tabular}{@{}lrr@{}}\toprule
+        \textbf{Altitude} & \textbf{Speed} & \textbf{Period} \\ \midrule
+        550 km & 7.59 km/s & 95.5 min \\
+        1200 km & 7.26 km/s & 109.3 min \\ \bottomrule
+      \end{tabular}}
+    \end{column}
+  \end{columns}
+  \assumption{Ideal circular orbits. $R=6371$ km, $\mu=398600.44$ km$^3$/s$^2$. Diagram is not to scale.}
+  \note{Equating gravitational acceleration mu/r squared to centripetal acceleration v squared/r gives the speed. Dividing circumference by speed gives period. The numerical values are generated by generate_figures.py. Raising a spacecraft into a new orbit involves maneuvers, which are outside this steady circular-orbit comparison. Background: https://science.nasa.gov/earth/earth-observatory/catalog-of-earth-satellite-orbits/}
+\end{frame}
+
+% 3. Inclination changes the latitudes of the point directly below a satellite.
+\begin{frame}{Inclination Controls the Latitudes Reached}
+  \context{Altitude sets the orbit's size. Inclination tilts its plane relative to the equator.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Inclination is the orbital tilt.}{
+          \item $i=0^\circ$ is equatorial. At $i=90^\circ$, the orbit passes over both poles. We compare prograde orbits with $0^\circ\leq i\leq90^\circ$.}
+        \point{The point below a satellite moves.}{
+          \item This \textbf{subsatellite point} reaches latitudes from $-i$ to $+i$. A $53^\circ$ orbit never passes directly above $70^\circ$ N.}
+        \point{Radio coverage extends farther.}{
+          \item A terminal can see a satellite away from overhead. The usable footprint extends beyond the ground track, as we calculate next.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Latitude during one revolution}
+      \begin{tikzpicture}
+        \begin{axis}[orbitaxis,
+          xmin=0,xmax=360,ymin=-90,ymax=90,
+          xtick={0,90,180,270,360},ytick={-90,-53,0,53,90},
+          xlabel={Position around orbit $u$ (degrees)},ylabel={Latitude (degrees)},
+          legend style={at={(0.5,-0.38)},anchor=north,legend columns=2,column sep=8pt}]
+          \addplot[Ink,line width=0.9pt] table[x=phase,y=i53,col sep=comma]{latitude.csv};
+          \addlegendentry{$i=53^\circ$}
+          \addplot[Muted,dashed,line width=0.9pt] table[x=phase,y=i85,col sep=comma]{latitude.csv};
+          \addlegendentry{$i=85^\circ$}
+        \end{axis}
+      \end{tikzpicture}
+      \par\vspace{0.10cm}
+      {\footnotesize $\sin\phi=\sin i\,\sin u$\par}
+      {\scriptsize $\phi$: subsatellite latitude\\$u$: angle from the northbound equator crossing\par}
+    \end{column}
+  \end{columns}
+  \assumption{Spherical Earth and circular orbits. These curves show subsatellite latitude, not a radio-coverage map.}
+  \note{For the prograde inclinations used here, the maximum absolute geocentric latitude equals inclination. For retrograde inclinations above 90 degrees, use 180 minus inclination for that limit. The angle u is argument of latitude, not ground longitude. Background: https://www.esa.int/Enabling_Support/Space_Transportation/Types_of_orbits}
+\end{frame}
+
+% 4. Earth rotation changes the ground track on successive revolutions.
+\begin{frame}{Earth Rotates Beneath the Orbital Plane}
+  \context{A ground track is the path of the subsatellite point on the rotating Earth.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{An orbit is not a fixed map curve.}{
+          \item In this ideal model, the orbital plane is fixed in space. Earth rotates eastward underneath it.}
+        \point{The next crossing shifts west.}{
+          \item Earth turns $23.9^\circ$ during a 95.5-minute orbit. The next northbound equator crossing shifts west by that amount.}
+        \point{Orbit period is not revisit time.}{
+          \item After one orbit, the satellite is over a different longitude. Revisiting a site depends on both motions.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two revolutions of the same $53^\circ$ orbit}
+      \begin{tikzpicture}
+        \begin{axis}[orbitaxis,
+          xmin=-180,xmax=180,ymin=-80,ymax=80,
+          xtick={-180,-90,0,90,180},ytick={-53,0,53},
+          xlabel={Longitude (degrees east)},ylabel={Latitude (degrees)},
+          legend style={at={(0.5,-0.45)},anchor=north,legend columns=2,column sep=8pt}]
+          \addplot[Ink,line width=0.9pt] table[x=lon,y=lat,col sep=comma]{ground-track-1.csv};
+          \addlegendentry{Revolution 1}
+          \addplot[Muted,dashed,line width=0.9pt] table[x=lon,y=lat,col sep=comma]{ground-track-2.csv};
+          \addlegendentry{Revolution 2}
+          \draw[densely dotted,Muted] (axis cs:0,0) -- (axis cs:0,-67);
+          \draw[densely dotted,Muted] (axis cs:-23.9409,0) -- (axis cs:-23.9409,-67);
+          \draw[{Stealth[length=1.4mm]}-{Stealth[length=1.4mm]},Ink] (axis cs:-23.9409,-66) -- (axis cs:0,-66);
+        \end{axis}
+      \end{tikzpicture}
+      \par\vspace{0.08cm}
+      {\footnotesize Westward shift $\approx360^\circ\times\dfrac{95.5}{1436.1}=23.9^\circ$\par}
+    \end{column}
+  \end{columns}
+  \assumption{550 km circular orbit, no precession. Earth's sidereal rotation period is 1436.1 min. Curves break at the map's date line.}
+  \note{The ideal circular state is projected onto a spherical rotating Earth. Earth-fixed longitude equals inertial longitude minus Earth rotation angle. Consecutive northbound equator crossings therefore differ by minus omega_E T. The plot is a longitude-latitude grid, not an equal-area projection. The CSV deliberately breaks at plus/minus 180 degrees. Background: https://science.nasa.gov/earth/earth-observatory/catalog-of-earth-satellite-orbits/}
+\end{frame}
+
+% 5. Fixed satellite count does not imply the same arrangement.
+\begin{frame}{Planes, Spacing, and Phasing Shape the Constellation}
+  \context{The same number of satellites can be distributed across orbital planes in different ways.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Planes spread orbit orientations.}{
+          \item Rotating planes about Earth's axis spreads their equator crossings across different longitudes.}
+        \point{Spacing sets the gap within a plane.}{
+          \item With $S$ evenly spaced satellites, the angular gap is $360^\circ/S$. More planes at fixed total count leave fewer satellites per plane.}
+        \point{Phasing staggers satellite positions.}{
+          \item Offsetting neighboring planes changes when their satellites arrive. Satellite count alone cannot describe coverage.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two layouts, each with 24 satellites}
+      \begin{tikzpicture}[xscale=0.88,yscale=0.73]
+        \path[use as bounding box] (-0.5,-0.25) rectangle (6.8,5.3);
+        \node[lab,font=\footnotesize\bfseries,anchor=west] at (0.0,4.94) {3 planes $\times$ 8 satellites: $45^\circ$ spacing};
+        \foreach \p in {0,1,2}{
+          \pgfmathsetmacro{\yy}{4.40-0.38*\p}
+          \node[smalllab,anchor=east] at (0.22,\yy) {P\the\numexpr\p+1\relax};
+          \draw[faint] (0.45,\yy) -- (6.5,\yy);
+          \foreach \k in {0,...,7}{\fill[Ink] ({0.65+0.72*\k+0.36*mod(\p,2)},\yy) circle (0.047);}
+        }
+        \node[smalllab,text=Muted] at (3.5,3.02) {Alternate rows are shifted by half a slot};
+        \draw[faint] (0,2.66) -- (6.5,2.66);
+        \node[lab,font=\footnotesize\bfseries,anchor=west] at (0.0,2.28) {6 planes $\times$ 4 satellites: $90^\circ$ spacing};
+        \foreach \p in {0,...,5}{
+          \pgfmathsetmacro{\yy}{1.78-0.31*\p}
+          \node[smalllab,anchor=east] at (0.22,\yy) {P\the\numexpr\p+1\relax};
+          \draw[faint] (0.45,\yy) -- (6.5,\yy);
+          \foreach \k in {0,...,3}{\fill[Ink] ({0.65+1.44*\k+0.72*mod(\p,2)},\yy) circle (0.047);}
+        }
+      \end{tikzpicture}
+      {\scriptsize Rows wrap around. Horizontal position is orbital angle.\par}
+    \end{column}
+  \end{columns}
+  \assumption{Schematic layouts at a common altitude and inclination. Half-slot offsets illustrate phasing, not a universal constellation rule.}
+  \note{Within a circular orbit, equal angular spacing corresponds to equal time spacing at a fixed point in inertial space. It is not the interval between passes over a rotating ground station. Orbit-plane orientation and along-orbit phase are distinct design variables. The schematic uses alternating half-slot offsets, as does the current SatNet Edu regular-shell helper.}
+\end{frame}
+
+% 6. Elevation masks give a geometric footprint around the subsatellite point.
+\begin{frame}{The Elevation Mask Sets the Usable Footprint}
+  \context{For one satellite, coverage is the set of ground locations that meet the chosen access conditions.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{A mask defines a circular footprint.}{
+          \item An elevation mask defines a circle centered on the subsatellite point. Its radius is measured along Earth's surface.}
+        \point{A higher mask makes it smaller.}{
+          \item A steeper viewing angle excludes distant contacts. At 550 km, a $25^\circ$ mask gives a radius of about 941 km.}
+        \point{Geometry is one access condition.}{
+          \item Antenna steering, blockage, and capacity can restrict service further. A geometric footprint does not guarantee throughput.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A stricter mask removes the outer region}
+      \begin{tikzpicture}[scale=0.88,transform shape]
+        \path[use as bounding box] (-0.05,-0.12) rectangle (6.6,2.95);
+        \filldraw[fill=Soft,draw=Muted] (1.65,1.43) circle (1.32);
+        \filldraw[fill=Mid,draw=Muted] (1.65,1.43) circle (0.746);
+        \filldraw[fill=Paper,draw=Ink] (1.65,1.43) circle (0.455);
+        \fill[Ink] (1.65,1.43) circle (0.045);
+        \draw[faint] (2.97,1.43) -- (3.40,2.47);
+        \node[lab,anchor=west] at (3.48,2.47) {$10^\circ$: 1664 km};
+        \draw[faint] (2.396,1.43) -- (3.40,1.80);
+        \node[lab,anchor=west] at (3.48,1.80) {$25^\circ$: 941 km};
+        \draw[faint] (2.105,1.43) -- (3.40,1.09);
+        \node[lab,anchor=west] at (3.48,1.09) {$40^\circ$: 573 km};
+        \node[smalllab,text=Muted] at (1.65,-0.02) {Center: subsatellite point};
+      \end{tikzpicture}
+      \par\vspace{0.12cm}
+      {\footnotesize $\psi=\arccos\!\left(\dfrac{R}{R+h}\cos e_{\min}\right)-e_{\min}$\par}\vspace{0.12cm}
+      {\footnotesize Surface radius $\rho=R\psi$\par}\vspace{0.10cm}
+      {\scriptsize $R$: Earth radius\quad $h$: altitude\quad $e_{\min}$: mask\\$\psi$: angle at Earth's center, in radians for $R\psi$\par}
+    \end{column}
+  \end{columns}
+  \assumption{550 km altitude and spherical Earth, $R=6371$ km. Circles compare surface radii, not commercial service beams.}
+  \note{In the triangle joining Earth's center, the satellite, and a ground point at minimum elevation, the center angle is arccos(R cos(e)/(R+h)) minus e. Surface distance is R times that angle in radians. The displayed radii are rounded from 1664.319, 940.546, and 573.417 km. All three circles use one radius scale.}
+\end{frame}
+
+% 7. The footprint and orbital speed jointly determine ideal contact duration.
+\begin{frame}{Contact Duration Depends on More Than Altitude}
+  \context{A ground terminal has a contact while the satellite stays above its elevation mask.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{A contact has a start and an end.}{
+          \item Elevation rises to a peak and falls again. The two crossings of the mask define the usable contact window.}
+        \point{Higher orbits can prolong contact.}{
+          \item A larger footprint and slower angular motion lengthen an overhead pass. These examples give 4.5 and 9.3 min above $25^\circ$.}
+        \point{A pass need not go overhead.}{
+          \item An off-center pass usually has a lower peak and shorter contact. Some passes never reach the required elevation.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two ideal overhead passes, one mask}
+      \begin{tikzpicture}
+        \begin{axis}[orbitaxis,
+          xmin=-8,xmax=8,ymin=0,ymax=95,
+          xtick={-8,-4,0,4,8},ytick={0,25,60,90},
+          xlabel={Minutes from overhead},ylabel={Elevation (degrees)},
+          legend style={at={(0.5,-0.39)},anchor=north,legend columns=2,column sep=8pt}]
+          \addplot[Ink,line width=0.9pt] table[x=minutes,y=h550,col sep=comma]{overhead-passes.csv};
+          \addlegendentry{550 km}
+          \addplot[Muted,dashed,line width=0.9pt] table[x=minutes,y=h1200,col sep=comma]{overhead-passes.csv};
+          \addlegendentry{1200 km}
+          \addplot[Muted,densely dotted,domain=-8:8,forget plot] {25};
+          \node[font=\tiny,anchor=south west] at (axis cs:-7.8,25) {$25^\circ$ mask};
+        \end{axis}
+      \end{tikzpicture}
+      \par\vspace{0.08cm}
+      {\footnotesize At $25^\circ$: \textbf{4.5 min} at 550 km, \textbf{9.3 min} at 1200 km\par}
+      {\scriptsize Ideal duration $\Delta t=2\psi/\omega$, where $\omega=2\pi/T$\par}
+    \end{column}
+  \end{columns}
+  \assumption{Circular overhead passes with Earth rotation omitted. $\psi$ is the footprint center angle. Actual contacts depend on relative motion.}
+  \note{At 550 km, psi is 8.458533 degrees and T is 95.502118 minutes, giving 4.487821 minutes. At 1200 km, the same 25-degree mask gives 9.288240 minutes. The plot omits Earth rotation to isolate altitude's effects. It is an ideal calculation, not an observed pass or an output of the project's TLE propagator.}
+\end{frame}
+
+% 8. Combine individual contacts and distinguish average count from continuity.
+\begin{frame}{Coverage Over Time Is the Union of Contacts}
+  \context{A constellation offers access whenever at least one satellite meets the terminal's access conditions.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Combine the individual windows.}{
+          \item Let $N(t)$ be the number of usable satellites. A terminal has geometric access when $N(t)\geq1$. A gap occurs when $N(t)=0$.}
+        \point{Overlap adds possible alternatives.}{
+          \item Here B and C overlap for one minute. Two candidates offer a choice, but do not automatically give twice the capacity.}
+        \point{An average can hide an interruption.}{
+          \item The mean count is one, yet access stops for a minute. Report coverage and gaps alongside the mean.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A mean count of 1 does not mean no gaps}
+      \begin{tikzpicture}[x=0.56cm,y=0.70cm]
+        \path[use as bounding box] (-1.1,-0.50) rectangle (10.8,5.32);
+        \fill[Soft] (3,-0.12) rectangle (4,4.73);
+        \node[smalllab] at (3.5,5.0) {Gap};
+        \fill[Mid] (7,2.60) rectangle (8,4.73);
+        \node[smalllab] at (7.5,5.0) {Overlap};
+        \foreach \name/\yy/\a/\b in {A/4.3/0/3,B/3.6/4/8,C/2.9/7/10}{
+          \node[lab,anchor=east] at (-0.25,\yy) {\name};
+          \draw[faint] (0,\yy) -- (10,\yy);
+          \draw[Ink,line width=3pt] (\a,\yy) -- (\b,\yy);
+        }
+        \draw[faint] (0,2.28) -- (10,2.28);
+        \node[smalllab,anchor=east] at (-0.25,1.35) {$N(t)$};
+        \draw[flow] (0,0) -- (10.4,0);
+        \draw[flow] (0,0) -- (0,2.18);
+        \foreach \n in {0,1,2}{\node[smalllab,anchor=east] at (-0.03,0.87*\n) {\n};}
+        \draw[Ink,line width=0.9pt] (0,0.87) -- (3,0.87) -- (3,0) -- (4,0) -- (4,0.87) -- (7,0.87) -- (7,1.74) -- (8,1.74) -- (8,0.87) -- (10,0.87);
+        \foreach \x in {0,3,4,7,8,10}{\draw[Muted] (\x,0) -- (\x,-0.08);\node[smalllab,below] at (\x,-0.08) {\x};}
+        \node[smalllab,anchor=west] at (10.25,-0.20) {min};
+      \end{tikzpicture}
+      \par\vspace{0.12cm}
+      {\footnotesize Covered: $9/10=90\%$\quad Mean count: $10/10=1$\par}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed 10-minute example: A [0,3), B [4,8), C [7,10]. Geometric access is not proof of an end-to-end Internet route.}
+  \note{The union has nine minutes, with one missing interval from 3 to 4. The integral of the count is 3 + 4 + 3 = 10 satellite-minutes. Dividing by ten minutes gives mean count one. The overlap from 7 to 8 has two usable satellites. Endpoints of intervals have zero effect on these continuous-time averages. These illustrative intervals are not orbit propagation results.}
+\end{frame}
+
+% 9. A geometric latitude envelope can rule out a design before simulation.
+\begin{frame}{More Satellites Cannot Fix the Wrong Latitude Reach}
+  \context{Check coverage at each location that needs service. A large constellation can still miss a region.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Combine orbital tilt and footprint.}{
+          \item A $53^\circ$ orbit reaches $53^\circ$ N below the satellite. At 550 km and a $25^\circ$ mask, its footprint extends at most another $8.46^\circ$.}
+        \point{Some locations are out of reach.}{
+          \item The northern limit is about $61.5^\circ$ N. Adding more satellites to this same shell cannot provide access at $70^\circ$ N.}
+        \point{Being inside the limit is not enough.}{
+          \item A terminal at $50^\circ$ N is geographically eligible. Its actual contact times still depend on longitude, spacing, and phase.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A necessary condition for northern access}
+      \begin{tikzpicture}[x=1cm,y=0.039cm]
+        \path[use as bounding box] (-0.8,-7) rectangle (6.3,96);
+        \fill[Soft] (0,0) rectangle (2.35,61.46);
+        \fill[Mid] (0,0) rectangle (2.35,53);
+        \draw[net] (0,0) rectangle (2.35,90);
+        \foreach \lat in {0,30,53,70,90}{
+          \draw[Muted] (-0.08,\lat) -- (0,\lat);
+          \node[smalllab,anchor=east] at (-0.13,\lat) {$\lat^\circ$};}
+        \draw[Ink,dashed] (0,61.46) -- (2.70,61.46);
+        \node[smalllab,anchor=west] at (2.83,61.46) {$61.5^\circ$ N: outer limit};
+        \node[smalllab,text width=1.8cm] at (1.17,25) {Subsatellite latitudes\\up to $53^\circ$ N};
+        \draw[flow] (1.15,53) -- (1.15,60.6);
+        \node[smalllab,anchor=west] at (2.83,82) {Northern hemisphere};
+        \fill[Ink] (2.35,70) circle[x radius=0.055cm,y radius=0.055cm];
+        \draw[faint] (2.45,70) -- (2.72,70);
+        \node[lab,anchor=west] at (2.83,72) {$70^\circ$ N: no access};
+        \fill[Ink] (2.35,50) circle[x radius=0.055cm,y radius=0.055cm];
+        \draw[faint] (2.45,50) -- (2.72,50);
+        \node[lab,anchor=west] at (2.83,47) {$50^\circ$ N: possible};
+        \node[smalllab,text=Muted,anchor=west] at (2.83,35) {Possible does not mean\\continuous coverage};
+      \end{tikzpicture}
+      \par\vspace{0.12cm}
+      {\footnotesize Northern limit $\leq \min(90^\circ,i+\psi)$\par}
+    \end{column}
+  \end{columns}
+  \assumption{Ideal $53^\circ$ circular shell, 550 km altitude, $25^\circ$ elevation mask. A geometric limit, not a guarantee of service inside it.}
+  \note{Any usable surface point is at most psi angular distance from a subsatellite point. Its latitude therefore cannot exceed i + psi, capped at 90 degrees, for these prograde orbits. This is a necessary envelope, not sufficient coverage. Exact finite-constellation coverage is more restrictive. The current simulator uses a slightly different reference sphere and a TLE propagator, so its detailed windows differ from these ideal calculations.}
+\end{frame}
+
+% 10. A controlled experiment that tests the geometric prediction.
+\begin{frame}{Test the Prediction by Changing Only Inclination}
+  \context{Use SatNet Edu to compare the same constellation at two inclinations and two ground latitudes.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Predict before running.}{
+          \item The $53^\circ$ shell cannot reach the $70^\circ$ N terminal with these settings. An $85^\circ$ shell makes access possible, not guaranteed.}
+        \point{Keep the other variables fixed.}{
+          \item Use the same altitude, satellite count, longitude, epoch, mask, and sampling interval. Change only inclination.}
+        \point{Inspect access at both locations.}{
+          \item Count usable ground links at each sample. Compare covered-sample fractions and gaps. Explain any tradeoff at $50^\circ$ N.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A controlled two-scenario comparison}
+      {\scriptsize\renewcommand{\arraystretch}{1.05}
+      \begin{tabular}{@{}lcc@{}}\toprule
+        \textbf{Setting} & \textbf{Scenario A} & \textbf{Scenario B} \\ \midrule
+        Inclination & $53^\circ$ & $85^\circ$ \\
+        Altitude & 550 km & 550 km \\
+        Planes $\times$ satellites & $6\times12$ & $6\times12$ \\
+        Minimum elevation & $25^\circ$ & $25^\circ$ \\
+        Ground terminals & \multicolumn{2}{c}{$50^\circ$ N and $70^\circ$ N, both $0^\circ$ E} \\
+        Duration / step & \multicolumn{2}{c}{6 hours / 30 seconds} \\ \bottomrule
+      \end{tabular}}
+      \par\vspace{0.10cm}
+      \begin{tikzpicture}[scale=0.88,transform shape]
+        \node[lab,draw=Line,fill=Soft,minimum height=0.46cm] (a) at (0,0) {Predict};
+        \node[lab,draw=Ink,minimum height=0.46cm] (b) at (2.0,0) {Run both};
+        \node[lab,draw=Line,minimum height=0.46cm] (c) at (4.15,0) {Explain};
+        \draw[flow] (a) -- (b);
+        \draw[flow] (b) -- (c);
+      \end{tikzpicture}
+      \par\vspace{0.16cm}
+      {\scriptsize Covered-sample fraction\\[3pt]$=\dfrac{\text{samples with at least one usable ground link}}{\text{all recorded samples}}$\par}
+    \end{column}
+  \end{columns}
+  \assumption{Use a common epoch and no failures. Sampled access can miss short gaps and does not establish an end-to-end route.}
+  \note{The companion coverage_experiment.py uses the current SatNet Edu API and counts incident ground links from recorded samples. The ideal-model latitude envelope predicts zero access for the northern terminal in scenario A. Do not infer capacity or network connectivity from a positive contact count. Repeat with a smaller step if a short gap or contact matters. API parameters are planes, sats_per_plane, altitude_km, inclination_deg, and min_elevation_deg.}
+\end{frame}
+\end{document}

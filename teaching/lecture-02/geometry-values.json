@@ -1,0 +1,33 @@
+{
+  "earth_radius_km": 6371.0,
+  "mu_km3_s2": 398600.4418,
+  "sidereal_day_s": 86164.0905,
+  "orbits": {
+    "550": {
+      "period_min": 95.50211815557677,
+      "speed_km_s": 7.588998434594857,
+      "contact_minutes_mask25": 4.487821130992826
+    },
+    "1200": {
+      "period_min": 109.26714592561119,
+      "speed_km_s": 7.255916307640205,
+      "contact_minutes_mask25": 9.28824019292909
+    }
+  },
+  "footprints_h550": {
+    "10": {
+      "angle_deg": 14.96758061913974,
+      "surface_radius_km": 1664.3190289917625
+    },
+    "25": {
+      "angle_deg": 8.458532849111865,
+      "surface_radius_km": 940.5459396775842
+    },
+    "40": {
+      "angle_deg": 5.156865317686707,
+      "surface_radius_km": 573.4172607160425
+    }
+  },
+  "ground_track_west_shift_deg": 23.940898583040905,
+  "latitude_envelope_i53_mask25": 61.45853284911186
+}

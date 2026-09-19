@@ -2,8 +2,8 @@
 # Called inside the LaTeX container, or locally with TeX Live installed.
 set -eu
 case "${1:-}" in
-  lecture-01) deck=lecture-01 ;;
-  *) echo 'Usage: sh teaching/build.sh lecture-01' >&2; exit 2 ;;
+  lecture-01|lecture-02) deck=$1 ;;
+  *) echo 'Usage: sh teaching/build.sh lecture-01|lecture-02' >&2; exit 2 ;;
 esac
 teaching_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 repo_dir=$(CDPATH= cd -- "$teaching_dir/.." && pwd)

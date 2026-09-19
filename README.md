@@ -71,6 +71,12 @@ the path from a user terminal to the Internet, with explanatory diagrams and wor
 examples of coverage, capacity, handover, and delay. Download the [slides](teaching/lecture-01/lecture-01.pdf)
 or adapt the [LaTeX Beamer source](teaching/lecture-01/main.tex) for your course.
 
+[Lecture 02: Orbits, Constellations, and Coverage](teaching/lecture-02/README.md)
+connects orbital motion to ground tracks, footprints, and contact windows, ending
+with a controlled inclination experiment. View the
+[slides](teaching/lecture-02/lecture-02.pdf) or edit the
+[LaTeX Beamer source](teaching/lecture-02/main.tex).
+
 ## Documentation
 
 [Python API](docs/API.md) · [Simulation model](docs/MODEL.md) · [Trace format](docs/TRACE_FORMAT.md)

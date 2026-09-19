@@ -29,6 +29,9 @@
 \setbeamerfont{title}{series=\bfseries,size=\LARGE}
 \setbeamerfont{frametitle}{series=\bfseries,size=\Large}
 \setbeamerfont{footline}{size=\tiny}
+\newcommand{\lecturenumber}{01}
+\newcommand{\lecturetopic}{Satellite Network Architecture}
+\newcommand{\setlecture}[2]{\renewcommand{\lecturenumber}{#1}\renewcommand{\lecturetopic}{#2}}
 \setbeamertemplate{background}{%
   \begin{tikzpicture}[remember picture,overlay]
     \fill[Line] (current page.south west) rectangle ([yshift=0.10cm]current page.south east);
@@ -45,7 +48,7 @@
 \setbeamertemplate{footline}{%
   \leavevmode\hbox{%
     \begin{beamercolorbox}[wd=.86\paperwidth,ht=2.8ex,dp=1.2ex,leftskip=0.7cm]{footline}
-      SATNET EDU\quad Lecture 01\quad Satellite Network Architecture
+      SATNET EDU\quad Lecture \lecturenumber\quad \lecturetopic
     \end{beamercolorbox}%
     \begin{beamercolorbox}[wd=.14\paperwidth,ht=2.8ex,dp=1.2ex,rightskip=0.7cm]{footline}
       \hfill\insertframenumber/\inserttotalframenumber
