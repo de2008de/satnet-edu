@@ -1,0 +1,335 @@
+% Native editable Beamer slides. Build from the repository root.
+\documentclass[aspectratio=169,11pt,handout,t]{beamer}
+\makeatletter
+\def\input@path{{../}}
+\makeatother
+\usepackage{satnetslides}
+\usepackage{listings}
+\input{../lecture-01/icons.tex}
+\lstset{language=Python,basicstyle=\ttfamily\fontsize{7.5}{9.5}\selectfont,
+  keywordstyle=\bfseries\color{Ink},commentstyle=\color{Muted},
+  stringstyle=\color{Muted},showstringspaces=false,columns=fullflexible,
+  keepspaces=true,frame=single,rulecolor=\color{Line},xleftmargin=3pt,xrightmargin=3pt}
+\tikzset{box/.style={draw=Line,fill=Soft,rounded corners=1pt,font=\scriptsize,
+  align=center,minimum height=0.65cm,inner sep=4pt},
+  dot/.style={circle,draw=Ink,fill=Paper,minimum size=0.50cm,inner sep=0pt,font=\scriptsize\bfseries}}
+\pgfplotsset{courseaxis/.style={width=6.6cm,height=4.0cm,
+  label style={font=\scriptsize},tick label style={font=\scriptsize},
+  axis line style={Muted},tick style={Muted},grid=major,grid style={Line,line width=0.25pt},
+  legend style={font=\scriptsize,draw=none,fill=Paper},unbounded coords=jump}}
+\setlecture{05}{Designing and Evaluating Satellite Networks}
+\title{Designing and Evaluating Satellite Networks}
+\author{Yi Ching (David) Chou}
+\date{}
+\begin{document}
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Paper] (current page.south west) rectangle (current page.north east);
+    \fill[Line] (current page.south west) rectangle ([yshift=0.18cm]current page.south east);
+    \fill[Ink] ([xshift=0.95cm,yshift=-0.95cm]current page.north west) rectangle ++(0.12cm,-5.35cm);
+    \node[anchor=north west,text=Muted] at ([xshift=1.35cm,yshift=-0.9cm]current page.north west)
+      {\small\bfseries SATNET EDU / Lecture 05};
+    \node[anchor=north west,align=left,text width=12.2cm]
+      at ([xshift=1.35cm,yshift=-1.65cm]current page.north west)
+      {{\fontsize{29}{33}\selectfont\bfseries Designing and Evaluating\\[0.12cm]Satellite Networks}};
+    \node[anchor=north west,align=left,text width=11.6cm,text=Muted]
+      at ([xshift=1.38cm,yshift=-3.85cm]current page.north west)
+      {\small How to turn a network idea into a controlled, reproducible experiment.};
+    \node[anchor=north west,fill=Ink,rounded corners=2pt,inner xsep=0.18cm,inner ysep=0.09cm,text=Paper]
+      (tag) at ([xshift=1.38cm,yshift=-4.78cm]current page.north west)
+      {\small\bfseries LECTURE 05};
+    \node[anchor=west,align=left,text width=9.5cm] at ([xshift=0.28cm]tag.east)
+      {\small From a design question to an explained result};
+    \draw[Ink,line width=1.1pt] ([xshift=1.38cm,yshift=-5.55cm]current page.north west) -- ++(10.9cm,0);
+    \node[anchor=north,align=center,text=Muted] at ([yshift=-5.85cm]current page.north)
+      {\small State the question. Control the comparison. Inspect the outcome.};
+    \node[anchor=north,align=center] at ([yshift=-6.65cm]current page.north)
+      {\small Instructor: Yi Ching (David) Chou};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]{Start with a Question That the Model Can Answer}
+  \context{Connect a design choice to a measurable outcome under stated conditions.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Turn a goal into a comparison.}{\item Ask how a specific topology change affects connectivity between two chosen ground sites.}
+        \point{Predict a mechanism first.}{\item Allowing more candidate ISLs may create alternate paths. Range and Earth blockage can still remove those links.}
+        \point{Match the claim to the model.}{\item SatNet Edu can compare geometric reachability and propagation. It cannot predict throughput without a traffic model.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Make the question testable}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\node[box,text width=5.5cm] (q) at (3.35,3.9) {Question\\Can an alternate path survive a failure?};
+\node[box,text width=5.5cm] (h) at (3.35,2.55) {Prediction\\Avoiding the failed node may preserve access};
+\node[box,text width=5.5cm] (m) at (3.35,1.2) {Measurement\\Count reachable samples during the failure};
+\draw[flow] (q)--(h);\draw[flow] (h)--(m);
+\node[smalllab,text=Muted] at (3.35,0.15) {Fix endpoints, time window, geometry, and routing metric};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{The teaching model omits antenna scheduling, capacity, queues, packet loss, and routing convergence.}
+  \note{A hypothesis may be rejected. More candidate links need not add a usable alternate path, and a second path sharing the failed node offers no protection. Refer to docs/MODEL.md for the implemented model.}
+\end{frame}
+
+\begin{frame}[fragile]{Change One Factor and Keep the Rest Comparable}
+  \context{A controlled comparison helps identify why a measured result changed.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Use a shared baseline.}{\item Use the same epoch, constellation, sites, elevation mask, duration, and sample times in both runs.}
+        \point{Name the factor you change.}{\item Here the failure schedule is the treatment. Add one satellite outage while leaving geometry and routing settings fixed.}
+        \point{Separate follow-up questions.}{\item A later experiment can change topology or altitude. Changing both at once makes a single-cause explanation harder.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{The paired failure experiment}
+{\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lll@{}}\toprule
+\textbf{Setting} & \textbf{Baseline} & \textbf{Failure run} \\ \midrule
+Satellites & $6\times12$ & $6\times12$ \\
+Altitude / tilt & 1000 km / $53^\circ$ & 1000 km / $53^\circ$ \\
+Access mask & $10^\circ$ & $10^\circ$ \\
+ISL limit & 4000 km & 4000 km \\
+Window / step & 20 min / 10 s & 20 min / 10 s \\
+Outage & None & 600--900 s \\
+\bottomrule\end{tabular}\par}\par\vspace{0.12cm}{\footnotesize Vancouver $\longleftrightarrow$ Tokyo\quad Same epoch\par}
+    \end{column}
+  \end{columns}
+  \assumption{Companion experiment uses orbital-neighbor links and epoch 2026-01-01 UTC. The node selection rule is documented.}
+  \note{The companion selects an interior satellite on the baseline delay route at 600 seconds and disables that same satellite in the failure run for [600,900). This is a targeted stress case, not a random failure estimate.}
+\end{frame}
+
+\begin{frame}[fragile]{Coverage, Reachability, and Delay Need Different Counts}
+  \context{Always state the population used in a metric, especially when some samples have no route.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Coverage is local to one site.}{\item Count samples with at least one usable ground link. This does not require a route to the destination.}
+        \point{Reachability is a pairwise property.}{\item Count samples with a complete source-to-destination path, using all scheduled observation times as the denominator.}
+        \point{Delay is conditional on a route.}{\item Average valid delays only and report the reachability fraction alongside them. Missing paths are not zero-delay paths.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{The denominator changes the meaning}
+{\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}llll@{}}\toprule
+\textbf{Time} & \textbf{U access} & \textbf{U--V route} & \textbf{Delay} \\ \midrule
+0 s & Yes & Yes & 12 ms \\
+10 s & Yes & No & --- \\
+20 s & Yes & Yes & 18 ms \\
+30 s & No & No & --- \\
+\bottomrule\end{tabular}\par}\par\vspace{0.12cm}{\footnotesize Coverage at U: $3/4=75\%$\par}\par\vspace{0.12cm}{\footnotesize Pair reachability: $2/4=50\%$\par}\par\vspace{0.12cm}{\footnotesize Conditional delay: $(12+18)/2=15$ ms\par}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed four-sample example. Delay here means one-way propagation. These are sample fractions, not exact time fractions.}
+  \note{A denominator of four with zeros substituted for missing delays gives 7.5 ms, a misleading score. A mean of 15 ms is valid only when paired with the statement that half the samples had no route.}
+\end{frame}
+
+\begin{frame}[fragile]{Unequal Sample Spacing Requires Time Weights}
+  \context{Extra samples near an event can change a sample average without changing the time history.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Samples can represent unequal time.}{\item A recorder can add samples at failure times. Counting every observation equally can overweight short periods.}
+        \point{Choose and label an estimator.}{\item A left-hold estimate assumes the observed state lasts until the next sample. Weight each state by that interval length.}
+        \point{Check sensitivity to finer sampling.}{\item This assumption can miss an unobserved change. Report the interval, window, and approximation with the metric.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two reachable samples, unequal durations}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\draw[flow] (0.65,2.9)--(6.7,2.9);
+\draw[Ink,line width=3pt] (0.8,3.1)--(1.32,3.1);
+\draw[Ink,line width=3pt] (6.0,3.1)--(6.52,3.1);
+\foreach \x/\t/\state in {0.8/0/1,1.32/1/0,6.0/10/1,6.52/11/0}{
+ \fill[Ink] (\x,2.9) circle (0.045);
+ \node[smalllab,below] at (\x,2.7) {\t};
+ \node[smalllab,above] at (\x,3.35) {$\state$};
+}
+\node[lab] at (3.5,4.05) {$a$: 1 for reachable, 0 otherwise};
+\node[lab] at (3.5,1.8) {Sample fraction: $2/4=50\%$};
+\node[lab] at (3.5,0.9) {Held-state time fraction: $(1+1)/11=18.2\%$};
+\node[smalllab,text=Muted] at (3.5,0.15) {Time in seconds. Final sample has zero following duration.};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed states at 0, 1, 10, and 11 s. The time fraction assumes the pictured state is held between samples.}
+  \note{The left-hold estimate is sum a\_k times (t\_{k+1}-t\_k), divided by t\_last-t\_first. It is an estimate for a sampled geometric process. An event-aligned schedule can make the held-state assumption exact for that explicit event alone.}
+\end{frame}
+
+\begin{frame}[fragile]{A Failure Test Should Target a Defined Component}
+  \context{A failure experiment is meaningful only when the disabled component and its timing are specified.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Choose a repeatable selection rule.}{\item Select an interior satellite on the baseline route at 600 seconds. Save its ID so the stress case can be reproduced.}
+        \point{Remove every incident link.}{\item A disabled satellite cannot forward traffic. Removing just one displayed route edge would test a different fault.}
+        \point{Look for a surviving alternate path.}{\item The replacement can be longer, or no path may remain. Neither outcome should be assumed before querying the graph.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{One failed node affects multiple links}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\node[dot] (U) at (0.5,2.0) {U};\node[dot] (A) at (2.2,3.4) {A};
+\node[dot,fill=Soft] (X) at (3.5,2.0) {X};\node[dot] (B) at (4.8,3.4) {B};
+\node[dot] (C) at (3.5,0.65) {C};\node[dot] (V) at (6.5,2.0) {V};
+\draw[net] (U)--(A) (B)--(V);
+\draw[net,dashed,Muted] (A)--(X)--(B) (X)--(C);
+\draw[net,line width=1.1pt] (A)--(C)--(B);
+\draw[Ink,line width=1pt] (3.2,1.7)--(3.8,2.3) (3.2,2.3)--(3.8,1.7);
+\node[smalllab] at (3.5,4.0) {Dashed links disappear with X};
+\node[smalllab] at (3.5,0.0) {The surviving route avoids X};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed graph. A targeted route-node failure tests a stress case, not average fleet reliability.}
+  \note{A link-disjoint alternative may still share a satellite. Node-disjoint alternatives, apart from endpoints, protect against one internal-node loss only under the graph assumptions. Correlated failures need separate tests.}
+\end{frame}
+
+\begin{frame}[fragile]{Compare the Failed Run with Its Matched Baseline}
+  \context{Orbital motion continues during a failure, so before-and-after values alone can mix two effects.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Compare the same timestamps.}{\item At each timestamp, compare both runs under identical motion. Their difference isolates the scheduled failure.}
+        \point{Separate outage from extra delay.}{\item Calculate delay differences only where both runs have a route. Report additional unreachable samples separately.}
+        \point{Inspect recovery independently.}{\item Restoring a node allows links to return. The model recomputes routes immediately, without protocol recovery delay.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A matched comparison during one event}
+{\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}llll@{}}\toprule
+\textbf{Time} & \textbf{Baseline} & \textbf{Failure} & \textbf{Difference} \\ \midrule
+590 s & 12 ms & 12 ms & 0 ms \\
+600 s & 13 ms & 18 ms & +5 ms \\
+700 s & 14 ms & No path & --- \\
+900 s & 15 ms & 15 ms & 0 ms \\
+\bottomrule\end{tabular}\par}
+\par\vspace{0.35cm}
+\begin{tikzpicture}[x=0.9cm,y=0.9cm]
+\draw[flow] (0.1,0.55)--(6.7,0.55);
+\fill[Mid] (1.5,0.8) rectangle (5.1,1.25);
+\node[lab,above] at (3.3,1.35) {Node disabled on $[600,900)$};
+\node[smalllab,below] at (1.5,0.5) {600 s};\node[smalllab,below] at (5.1,0.5) {900 s};
+\end{tikzpicture}
+
+    \end{column}
+  \end{columns}
+  \assumption{Constructed comparison values. The companion script supplies actual traces and metrics for the chosen scenario.}
+  \note{The interval is half-open. At 600 seconds the satellite is disabled. At 900 it is enabled. A zero difference outside the failure is expected in this deterministic memoryless graph model. It is not a statement about real protocol convergence.}
+\end{frame}
+
+\begin{frame}[fragile]{Keep Designs That Offer a Useful Tradeoff}
+  \context{No single metric captures satellite count, connectivity, and path quality at the same time.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Choose a small set of objectives.}{\item Here we prefer fewer satellites, a higher reachable-sample fraction, and lower conditional propagation delay.}
+        \point{Reject a dominated design.}{\item B beats C on satellite count and delay while matching reachability. C offers no benefit under these chosen metrics.}
+        \point{Keep useful alternatives.}{\item A is cheaper but less connected than B. Choosing between them requires an explicit service goal or resource budget.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{An illustrative three-design comparison}
+{\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}llll@{}}\toprule
+\textbf{Design} & \textbf{Satellites} & \textbf{Reachable} & \textbf{Delay} \\ \midrule
+A & 48 & $80\%$ & 24 ms \\
+B & 72 & $95\%$ & 20 ms \\
+C & 96 & $95\%$ & 25 ms \\
+\bottomrule\end{tabular}\par}
+\par\vspace{0.15cm}
+\begin{tikzpicture}
+\begin{axis}[width=6.5cm,height=2.75cm,xmin=40,xmax=105,ymin=75,ymax=110,
+xtick={48,72,96},ytick={80,95},xlabel={Satellite count},ylabel={Reachable (\%)},
+label style={font=\scriptsize},tick label style={font=\scriptsize},grid=major,grid style={Line}]
+\addplot[only marks,mark=*,Ink] coordinates {(48,80)(72,95)(96,95)};
+\node[font=\scriptsize,anchor=south] at (axis cs:48,81) {A};
+\node[font=\scriptsize,anchor=south] at (axis cs:72,96) {B};
+\node[font=\scriptsize,anchor=south] at (axis cs:96,96) {C};
+\draw[flow] (axis cs:93,92)--(axis cs:75,92);
+\end{axis}
+\end{tikzpicture}
+
+    \end{column}
+  \end{columns}
+  \assumption{Constructed results, not simulator output. Satellite count is a resource proxy, not a complete financial cost.}
+  \note{Pareto dominance means no worse in every selected objective and strictly better in at least one. The table contains a third objective, delay, that the two-dimensional scatterplot cannot display. Compare delay on a common reachable subset if selection effects matter.}
+\end{frame}
+
+\begin{frame}[fragile]{Save the Scenario and the Recorded Outcomes}
+  \context{A reproducible result needs more than a screenshot of a favorable instant.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Preserve inputs and selection rules.}{\item Record the epoch, orbit parameters, topology, endpoints, failure ID, and sampling schedule with the script.}
+        \point{Keep the complete recording.}{\item Save states and routes, including no-path samples. A viewer can replay the recording without running Python again.}
+        \point{State the model and time window.}{\item Include dependency versions, metrics, and limitations. A short synthetic run does not establish worldwide operational service.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A result another student can inspect}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\node[box,text width=1.65cm] (a) at (1.0,3.4) {Scenario\\+ script};
+\node[box,text width=1.65cm] (b) at (3.4,3.4) {Python\\simulation};
+\node[box,text width=1.65cm] (c) at (5.8,3.4) {JSON\\recording};
+\draw[flow] (a)--(b);\draw[flow] (b)--(c);
+\node[box,text width=2.2cm] (d) at (2.0,1.35) {Metric table\\and assumptions};
+\node[box,text width=2.2cm] (e) at (5.35,1.35) {Offline HTML\\viewer};
+\draw[flow] (c.south)--(e.north);
+\draw[flow] (c.south) to[bend right=20] (d.north);
+\node[smalllab,text=Muted] at (3.4,0.15) {The viewer displays records. It does not recompute routes.};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{The exported trace includes scenario data and dependency versions. The basic model is deterministic.}
+  \note{Run.save validates before writing. Run.export\_html packages the existing recording. A recorded seed is not a substitute for specifying a stochastic model, and this basic model draws no random failures.}
+\end{frame}
+
+\begin{frame}[fragile]{Build a Defensible Satellite-Network Experiment}
+  \context{Combine architecture, coverage, routing, and time-varying behavior in a small final investigation.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Begin with the paired failure script.}{\item Predict the outcome, run both cases, and locate any extra disconnections or detours in the viewer.}
+        \point{Make one justified design revision.}{\item Change the topology policy or constellation layout. Repeat the same failure rule and compare the same metrics and sites.}
+        \point{Explain a result and a limitation.}{\item Use a route diagram and a time plot to explain the mechanism. State what the experiment cannot conclude.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A compact final submission}
+{\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}ll@{}}\toprule
+\textbf{Include} & \textbf{Answer} \\ \midrule
+Question + prediction & What should change, and why? \\
+Baseline + revision & Which design factor changed? \\
+Saved JSON + HTML & Can another student inspect it? \\
+Metrics + time plot & How often, how long, how far? \\
+Conclusion + limits & What does this run support? \\
+\bottomrule\end{tabular}\par}
+\par\vspace{0.25cm}
+\begin{lstlisting}
+python teaching/lecture-05/experiment.py
+\end{lstlisting}
+\par\vspace{0.12cm}{\footnotesize Outputs: paired traces, viewers, and CSV metrics\par}
+    \end{column}
+  \end{columns}
+  \assumption{Use the same failure ID to isolate a design change. Retargeting a new route node asks a different stress-test question.}
+  \note{The script saves the chosen failure ID in summary.json. For a revision use that fixed ID when it still identifies a corresponding satellite. If constellation membership changes, define a comparable fault rule explicitly and describe the changed question. Do not claim a throughput improvement from geometric reachability.}
+\end{frame}
+\end{document}

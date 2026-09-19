@@ -1,0 +1,343 @@
+% Native editable Beamer slides. Build from the repository root.
+\documentclass[aspectratio=169,11pt,handout,t]{beamer}
+\makeatletter
+\def\input@path{{../}}
+\makeatother
+\usepackage{satnetslides}
+\usepackage{listings}
+\input{../lecture-01/icons.tex}
+\lstset{language=Python,basicstyle=\ttfamily\fontsize{7.5}{9.5}\selectfont,
+  keywordstyle=\bfseries\color{Ink},commentstyle=\color{Muted},
+  stringstyle=\color{Muted},showstringspaces=false,columns=fullflexible,
+  keepspaces=true,frame=single,rulecolor=\color{Line},xleftmargin=3pt,xrightmargin=3pt}
+\tikzset{box/.style={draw=Line,fill=Soft,rounded corners=1pt,font=\scriptsize,
+  align=center,minimum height=0.65cm,inner sep=4pt},
+  dot/.style={circle,draw=Ink,fill=Paper,minimum size=0.50cm,inner sep=0pt,font=\scriptsize\bfseries}}
+\pgfplotsset{courseaxis/.style={width=6.6cm,height=4.0cm,
+  label style={font=\scriptsize},tick label style={font=\scriptsize},
+  axis line style={Muted},tick style={Muted},grid=major,grid style={Line,line width=0.25pt},
+  legend style={font=\scriptsize,draw=none,fill=Paper},unbounded coords=jump}}
+\setlecture{04}{Dynamics, Handover, and Performance}
+\title{Dynamics, Handover, and Performance}
+\author{Yi Ching (David) Chou}
+\date{}
+\begin{document}
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Paper] (current page.south west) rectangle (current page.north east);
+    \fill[Line] (current page.south west) rectangle ([yshift=0.18cm]current page.south east);
+    \fill[Ink] ([xshift=0.95cm,yshift=-0.95cm]current page.north west) rectangle ++(0.12cm,-5.35cm);
+    \node[anchor=north west,text=Muted] at ([xshift=1.35cm,yshift=-0.9cm]current page.north west)
+      {\small\bfseries SATNET EDU / Lecture 04};
+    \node[anchor=north west,align=left,text width=12.2cm]
+      at ([xshift=1.35cm,yshift=-1.65cm]current page.north west)
+      {{\fontsize{29}{33}\selectfont\bfseries Dynamics, Handover,\\[0.12cm]and Performance}};
+    \node[anchor=north west,align=left,text width=11.6cm,text=Muted]
+      at ([xshift=1.38cm,yshift=-3.85cm]current page.north west)
+      {\small How changing links and routes affect communication over time.};
+    \node[anchor=north west,fill=Ink,rounded corners=2pt,inner xsep=0.18cm,inner ysep=0.09cm,text=Paper]
+      (tag) at ([xshift=1.38cm,yshift=-4.78cm]current page.north west)
+      {\small\bfseries LECTURE 04};
+    \node[anchor=west,align=left,text width=9.5cm] at ([xshift=0.28cm]tag.east)
+      {\small From a working snapshot to a changing connection};
+    \draw[Ink,line width=1.1pt] ([xshift=1.38cm,yshift=-5.55cm]current page.north west) -- ++(10.9cm,0);
+    \node[anchor=north,align=center,text=Muted] at ([yshift=-5.85cm]current page.north)
+      {\small Follow the timeline. Explain the transition. Measure the effect.};
+    \node[anchor=north,align=center] at ([yshift=-6.65cm]current page.north)
+      {\small Instructor: Yi Ching (David) Chou};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]{A Working Route Is a Statement About One Time}
+  \context{Satellite motion changes link availability and distance even when both ground terminals stay still.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Edges can appear or disappear.}{\item A terminal crosses a footprint edge. An ISL exceeds its range. A scheduled failure disables a node.}
+        \point{Weights can change without an outage.}{\item The same sequence of satellites can remain connected while changing distances alter its propagation delay.}
+        \point{Track the graph through time.}{\item A route at time $t$ does not prove that the same path will work at $t+\Delta t$.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Same endpoints, a different usable chain}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\foreach \yy/\id/\lab in {3.5/first/{Time $t_0$},1.2/second/{Time $t_1$}}{
+ \node[smalllab,anchor=west] at (0,\yy+0.65) {\lab};
+ \node[dot] (u\id) at (0.55,\yy) {U};
+ \node[dot] (a\id) at (2.3,\yy) {A};
+ \node[dot] (b\id) at (4.1,\yy) {B};
+ \node[dot] (v\id) at (5.95,\yy) {V};
+}
+\draw[net,line width=1pt] (ufirst)--(afirst)--(bfirst)--(vfirst);
+\draw[net,dashed,Muted] (usecond)--(asecond);
+\draw[net,line width=1pt] (usecond) to[bend right=25] (bsecond);
+\draw[net] (asecond)--(bsecond)--(vsecond);
+\node[smalllab] at (3.15,0.05) {U now enters through B};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed snapshots. Dashed lines mark an unavailable former link. No control-plane timing is implied.}
+  \note{A snapshot route is an instantaneous graph answer. It does not promise that all edges remain available during a packet journey or model routing convergence.}
+\end{frame}
+
+\begin{frame}[fragile]{Handover Transfers Service Between Access Links}
+  \context{Overlapping contact windows provide time to prepare a new access link before the old one ends.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Separate availability from selection.}{\item A terminal may see both A and B, while its traffic uses only A. Visibility does not specify a handover policy.}
+        \point{Use the overlap to prepare.}{\item Acquire the new link, validate it, and transfer traffic before releasing the old link when hardware permits.}
+        \point{Account for setup time.}{\item A 20-second overlap with 6 seconds of preparation leaves at most 14 seconds for other actions and margin.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{An overlap creates a preparation opportunity}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\foreach \yy/\name in {3.7/{A visible},2.8/{B visible},1.8/{Prepare B},0.85/{Selected}}{
+ \node[smalllab,anchor=east] at (1.35,\yy) {\name};
+ \draw[faint] (1.5,\yy)--(6.8,\yy);
+}
+\fill[Soft] (3.5,0.45) rectangle (5.5,4.05);
+\draw[Ink,line width=3pt] (1.5,3.7)--(5.5,3.7);
+\draw[Muted,line width=3pt] (3.5,2.8)--(6.8,2.8);
+\draw[Ink,line width=3pt] (3.5,1.8)--(4.1,1.8);
+\node[smalllab,above] at (3.8,1.8) {6 s};
+\draw[Ink,line width=3pt] (1.5,0.85)--(4.1,0.85);
+\draw[Muted,line width=3pt] (4.1,0.85)--(6.8,0.85);
+\node[smalllab,above] at (2.4,0.85) {A};\node[smalllab,above] at (5.7,0.85) {B};
+\foreach \x/\t in {1.5/0,3.5/20,4.1/26,5.5/40,6.8/53}{\node[smalllab,below] at (\x,0.25) {\t};}
+\node[smalllab] at (4.5,4.3) {20 s overlap};
+\node[smalllab,anchor=east] at (1.35,0) {Time (s)};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed make-before-break example. Dual-link preparation requires supporting terminal hardware.}
+  \note{A is available from 0 to 40 seconds and B from 20 to 53. Preparation occupies 20 to 26. Switching at 26 occurs before A leaves. Current SatNet Edu records available links, not this handover state machine.}
+\end{frame}
+
+\begin{frame}[fragile]{The Best Link Now May Leave Soon}
+  \context{An access policy can consider both current geometry and the time remaining before contact ends.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{High elevation can shorten the link.}{\item It often gives a shorter slant range. A descending satellite can still be close to the end of its contact.}
+        \point{Remaining contact time is different.}{\item A rising satellite may have a longer usable future window even when its current elevation is lower.}
+        \point{Avoid switching on every small gain.}{\item A hysteresis margin requires a meaningful improvement. A minimum dwell time can also reduce repeated switching.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two candidates at the same decision time}
+{\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lll@{}}\toprule
+\textbf{Candidate} & \textbf{Elevation} & \textbf{Time left} \\ \midrule
+A, descending & $55^\circ$ & 35 s \\
+B, rising & $40^\circ$ & 180 s \\
+\bottomrule\end{tabular}\par}
+\par\vspace{0.3cm}
+\begin{tikzpicture}[x=0.9cm,y=0.9cm]
+\node[box,text width=2.4cm] at (1.55,1.55) {Best elevation now\\chooses A};
+\node[box,text width=2.4cm] at (5.0,1.55) {Longer contact\\chooses B};
+\node[lab,text width=5.7cm] at (3.3,0.1) {Example rule: switch only if the new score exceeds the old score by margin $H$};
+\end{tikzpicture}
+
+    \end{column}
+  \end{columns}
+  \assumption{Illustrative candidate values and policies. Future visibility does not guarantee capacity or route availability.}
+  \note{The score must be defined in a real policy and may combine elevation, predicted contact duration, load, and route quality. Hysteresis and minimum dwell time trade responsiveness against switching. No particular operator policy is claimed.}
+\end{frame}
+
+\begin{frame}[fragile]{Path Changes Can Make Delay Jump}
+  \context{Orbital motion changes a path smoothly, but selecting a different path can cause a sudden shift.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Follow each candidate path.}{\item Its propagation cost varies as the satellites move. Availability can end before its cost becomes unattractive.}
+        \point{A switch can add delay.}{\item Here the 12 ms path disappears at 30 seconds. The available replacement costs 17 ms at that moment.}
+        \point{Report changes as well as averages.}{\item Two traces with the same mean delay can have different jumps, interruptions, and route lifetimes.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{The cheapest path becomes unavailable}
+
+\begin{tikzpicture}
+\begin{axis}[courseaxis,xmin=0,xmax=60,ymin=8,ymax=22,
+xtick={0,15,30,45,60},ytick={10,12,15,17,20},
+xlabel={Time (s)},ylabel={Propagation delay (ms)}]
+\addplot[Muted,dashed,line width=0.8pt] coordinates {(0,19)(30,17)(60,15)};
+\addplot[Ink,line width=1.3pt] coordinates {(0,10)(30,12)(30,17)(60,15)};
+\node[font=\scriptsize,anchor=west] at (axis cs:3,11.5) {Path A};
+\node[font=\scriptsize,anchor=west] at (axis cs:38,18.5) {Path B};
+\draw[Muted,densely dotted] (axis cs:30,8)--(axis cs:30,22);
+\end{axis}
+\end{tikzpicture}
+\par\vspace{0.12cm}{\footnotesize Bold: selected path\quad Dashed: available alternative\par}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed path costs. The jump is 5 ms. No packet loss or queueing is inferred from this plot.}
+  \note{At 30 seconds path A ceases to be available. The bold vertical segment depicts a change in selected cost, not a packet spending time on a vertical path.}
+\end{frame}
+
+\begin{frame}[fragile]{Propagation Is Only One Part of Packet Delay}
+  \context{A short route through space can still carry packets slowly when other delay terms are large.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Separate the four common terms.}{\item Propagation moves a signal. Transmission places bits on a link. Queueing waits for service. Processing examines the packet.}
+        \point{Use compatible units.}{\item A 1500-byte packet has 12000 bits. On a 10 Mb/s link, transmission takes 1.2 ms before adding other terms.}
+        \point{Do not label propagation as RTT.}{\item Round-trip time includes forward and return paths. An application may also wait for servers or additional exchanges.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{One illustrative hop: 16.4 ms total}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\foreach \x/\w/\shade/\lab in {0.15/2.46/Mid/{Propagation},2.61/0.492/Ink/{Tx},3.102/3.69/Soft/{Queue}}{
+ \filldraw[fill=\shade,draw=Muted] (\x,2.55) rectangle ++(\w,0.75);
+}
+\filldraw[fill=Muted,draw=Muted] (6.792,2.55) rectangle ++(0.082,0.75);
+\node[lab] at (1.35,3.75) {6 ms};\node[lab] at (2.9,3.75) {1.2};
+\node[lab] at (4.8,3.75) {9 ms};
+\node[smalllab,anchor=east] at (6.9,1.45) {Processing: 0.2 ms};
+\node[smalllab] at (1.35,2.05) {Propagation};
+\node[smalllab] at (2.9,1.6) {Transmission};
+\node[smalllab] at (4.8,2.05) {Queueing};
+\node[lab] at (3.45,0.65) {$D=\sum_{\text{hops}}(d/c+L/C+q+p)$};
+\node[smalllab,text=Muted] at (3.45,0.05) {$L$: bits, $C$: bit/s, $q$: wait, $p$: processing};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed store-and-forward example. SatNet Edu computes only the propagation term $\sum d/c$.}
+  \note{The widths are proportional to 6, 1.2, 9 and 0.2 ms. End-to-end terms depend on the forwarding model. Background for satellite delay components: RFC 2488 section 2. https://www.rfc-editor.org/rfc/rfc2488.html}
+\end{frame}
+
+\begin{frame}[fragile]{An Outage Can Leave a Queue After Access Returns}
+  \context{Restoring a link stops the outage, but it does not instantly remove accumulated traffic.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Traffic can accumulate during a gap.}{\item At an arrival rate of 20 Mb/s, a 0.5-second outage builds 10 Mbit if the buffer has enough space.}
+        \point{Drain using spare service rate.}{\item After recovery at 50 Mb/s, ongoing arrivals still consume 20 Mb/s. Only 30 Mb/s remains to clear the backlog.}
+        \point{Buffer limits change the outcome.}{\item A smaller buffer loses traffic instead. When service is no greater than arrivals, the queue cannot drain.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Recovery continues beyond link restoration}
+
+\begin{tikzpicture}
+\begin{axis}[courseaxis,xmin=0,xmax=1.1,ymin=0,ymax=12,
+xtick={0,0.5,0.833,1.1},xticklabels={0,0.5,0.833,1.1},
+ytick={0,5,10},xlabel={Time (s)},ylabel={Backlog (Mbit)}]
+\addplot[Ink,line width=1.1pt] coordinates {(0,0)(0.5,10)(0.833333,0)(1.1,0)};
+\draw[Muted,dashed] (axis cs:0.5,0)--(axis cs:0.5,12);
+\node[font=\scriptsize] at (axis cs:0.27,11) {Link down};
+\node[font=\scriptsize] at (axis cs:0.82,11) {Link restored};
+\end{axis}
+\end{tikzpicture}
+\par\vspace{0.12cm}{\footnotesize Drain time $=10/(50-20)=0.333$ s\par}
+    \end{column}
+  \end{columns}
+  \assumption{Ideal fluid queue, constant arrivals, adequate buffer. This calculation is outside the SatNet Edu model.}
+  \note{Queue growth has slope 20 Mbit/s during the outage and minus 30 Mbit/s after recovery. A topology trace alone cannot determine this backlog because arrival and service rates are not modeled.}
+\end{frame}
+
+\begin{frame}[fragile]{A Sender Needs Enough Data in Flight}
+  \context{A sender waiting for acknowledgements can underuse a fast path when its send window is too small.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Relate capacity to feedback time.}{\item At bottleneck rate $C$ and round-trip time RTT, the bandwidth-delay product is $C\times\mathrm{RTT}$ bits.}
+        \point{A small window can limit the rate.}{\item With at most $W$ unacknowledged bits, an ideal window-limited flow achieves no more than $W/\mathrm{RTT}$.}
+        \point{RTT changes the required window.}{\item At 100 Mb/s and 40 ms RTT, 4 Mbit must be in flight to keep the ideal path busy.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{100 Mb/s with a 40 ms RTT}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\node[box] (s) at (0.8,3.55) {Sender};\node[box] (r) at (5.9,3.55) {Receiver};
+\draw[flow] (s) to[bend left=20] node[weight,above]{Data in flight}(r);
+\draw[flow] (r) to[bend left=20] node[weight,below]{Acknowledgements}(s);
+\node[lab] at (3.35,1.75) {$\mathrm{BDP}=100\times0.040=4$ Mbit};
+\node[box,text width=5.4cm] at (3.35,0.65) {A 1 Mbit window gives at most\\$1/0.040=25$ Mb/s in this ideal model};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Ideal continuous transfer. Congestion, loss, receiver limits, and protocol behavior can reduce throughput further.}
+  \note{W is the effective bound on unacknowledged data, not a claim about one particular TCP implementation. 4 Mbit is 500000 bytes. Background: RFC 2488, section 2, bandwidth-delay product. https://www.rfc-editor.org/rfc/rfc2488.html}
+\end{frame}
+
+\begin{frame}[fragile]{A Faster New Path Can Reorder Packets}
+  \context{Packets sent later can arrive earlier when a flow moves to a shorter-delay path.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Compare send and arrival times.}{\item Packet 1 leaves at 0 ms on a 30 ms path. Packet 2 leaves at 5 ms on a 10 ms path.}
+        \point{Arrival order can reverse.}{\item Packet 2 arrives at 15 ms, before packet 1 at 30 ms. A route change can reorder traffic without losing either packet.}
+        \point{Applications depend on timing.}{\item Real-time playback needs timing margin. Reliable transports may buffer out-of-order data before delivery.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two paths, crossed arrival order}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\draw[flow] (0.85,4.15)--(0.85,0.15);
+\draw[flow] (5.7,4.15)--(5.7,0.15);
+\node[lab,above] at (0.85,4.15) {Sender};\node[lab,above] at (5.7,4.15) {Receiver};
+\draw[flow,line width=1pt] (0.85,3.65)--node[weight,pos=0.68,below,sloped]{Packet 1: 30 ms}(5.7,0.65);
+\draw[flow,dashed,line width=1pt] (0.85,3.15)--node[weight,pos=0.58,above,sloped]{Packet 2: 10 ms}(5.7,2.15);
+\node[smalllab,anchor=east] at (0.72,3.65) {0 ms};\node[smalllab,anchor=east] at (0.72,3.15) {5 ms};
+\node[smalllab,anchor=west] at (5.85,2.15) {15 ms};\node[smalllab,anchor=west] at (5.85,0.65) {30 ms};
+\node[smalllab] at (3.25,0.1) {Time increases downward};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed packet-timing example. Serialization is omitted. SatNet Edu does not simulate packet arrivals.}
+  \note{Arrival equals send time plus path delay. The newer packet arrives 15 ms earlier. Do not infer packet loss or specific TCP reactions just from the route trace.}
+\end{frame}
+
+\begin{frame}[fragile]{A Coarse Recording Can Hide a Short Interruption}
+  \context{Recorded snapshots support claims about sample times, not every instant between them.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{State what was sampled.}{\item A 30-second recording can miss an outage entirely when the gap lies between two samples.}
+        \point{Refine the observation interval.}{\item Compare 30-second and 5-second recordings using the same scenario. Check whether important transitions become visible.}
+        \point{Keep model limits explicit.}{\item SatNet Edu inserts scheduled failure times. Changes caused by geometry still require sufficiently frequent samples.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A gap from 12 to 18 seconds}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\fill[Soft] (2.9,0.4) rectangle (3.8,4.1);
+\node[smalllab] at (3.35,4.35) {6 s gap};
+\foreach \yy/\lab in {3.5/{Actual access},2.25/{30 s samples},1/{5 s samples}}{
+ \node[smalllab,anchor=east] at (1.05,\yy) {\lab};\draw[faint] (1.1,\yy)--(6.5,\yy);
+}
+\draw[Ink,line width=3pt] (1.1,3.5)--(2.9,3.5) (3.8,3.5)--(6.5,3.5);
+\foreach \x in {1.1,5.6}{\fill[Ink] (\x,2.25) circle (0.06);}
+\foreach \x in {1.1,1.85,2.6,4.1,4.85,5.6,6.35}{\fill[Ink] (\x,1) circle (0.06);}
+\draw[Ink,fill=Paper] (3.35,1) circle (0.07);
+\foreach \x/\t in {1.1/0,2.9/12,3.8/18,5.6/30}{\node[smalllab,below] at (\x,0.18) {\t};}
+\node[smalllab] at (3.8,-0.18) {Time (s). Open circle: no access.};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed unscheduled gap. A 5-second interval detects this gap but still does not locate its exact start and end.}
+  \note{Both 30-second samples at 0 and 30 report access. The 5-second sample at 15 detects an outage. This example concerns changes inferred from geometry, not explicit scheduled failures, whose start and end are inserted into a SatNet Edu trace.}
+\end{frame}
+\end{document}

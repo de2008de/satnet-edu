@@ -66,16 +66,22 @@ and import your JSON file. To add playback to a website, see the
 
 ## Learn satellite networking
 
-[Lecture 01: Satellite Network Architecture](teaching/lecture-01/README.md) introduces
-the path from a user terminal to the Internet, with explanatory diagrams and worked
-examples of coverage, capacity, handover, and delay. Download the [slides](teaching/lecture-01/lecture-01.pdf)
-or adapt the [LaTeX Beamer source](teaching/lecture-01/main.tex) for your course.
+Follow a [five-lecture introduction](teaching/README.md), with worked examples,
+editable LaTeX Beamer diagrams, and companion Python experiments. Each English
+lecture has ten slides, from architecture through an independent network study.
 
-[Lecture 02: Orbits, Constellations, and Coverage](teaching/lecture-02/README.md)
-connects orbital motion to ground tracks, footprints, and contact windows, ending
-with a controlled inclination experiment. View the
-[slides](teaching/lecture-02/lecture-02.pdf) or edit the
-[LaTeX Beamer source](teaching/lecture-02/main.tex).
+| Lecture | Slides | Source |
+|---|---|---|
+| 01. Satellite Network Architecture | [PDF](teaching/lecture-01/lecture-01.pdf) | [TeX](teaching/lecture-01/main.tex) |
+| 02. Orbits, Constellations, and Coverage | [PDF](teaching/lecture-02/lecture-02.pdf) | [TeX](teaching/lecture-02/main.tex) |
+| 03. Links, Topology, and Routing | [PDF](teaching/lecture-03/lecture-03.pdf) | [TeX](teaching/lecture-03/main.tex) |
+| 04. Dynamics, Handover, and Performance | [PDF](teaching/lecture-04/lecture-04.pdf) | [TeX](teaching/lecture-04/main.tex) |
+| 05. Designing and Evaluating Satellite Networks | [PDF](teaching/lecture-05/lecture-05.pdf) | [TeX](teaching/lecture-05/main.tex) |
+
+Put the concepts into practice with [Lab 01: Experiments with SatNet Edu](teaching/lab-01/README.md).
+The [ten-slide lab](teaching/lab-01/lab-01.pdf) and
+[runnable Python script](teaching/lab-01/experiment.py) guide students from
+installation to a recorded Vancouver–Tokyo failure comparison.
 
 ## Documentation
 

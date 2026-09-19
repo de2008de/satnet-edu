@@ -1,0 +1,330 @@
+% Native editable Beamer slides. Build from the repository root.
+\documentclass[aspectratio=169,11pt,handout,t]{beamer}
+\makeatletter
+\def\input@path{{../}}
+\makeatother
+\usepackage{satnetslides}
+\usepackage{listings}
+\input{../lecture-01/icons.tex}
+\lstset{language=Python,basicstyle=\ttfamily\fontsize{7.5}{9.5}\selectfont,
+  keywordstyle=\bfseries\color{Ink},commentstyle=\color{Muted},
+  stringstyle=\color{Muted},showstringspaces=false,columns=fullflexible,
+  keepspaces=true,frame=single,rulecolor=\color{Line},xleftmargin=3pt,xrightmargin=3pt}
+\tikzset{box/.style={draw=Line,fill=Soft,rounded corners=1pt,font=\scriptsize,
+  align=center,minimum height=0.65cm,inner sep=4pt},
+  dot/.style={circle,draw=Ink,fill=Paper,minimum size=0.50cm,inner sep=0pt,font=\scriptsize\bfseries}}
+\pgfplotsset{courseaxis/.style={width=6.6cm,height=4.0cm,
+  label style={font=\scriptsize},tick label style={font=\scriptsize},
+  axis line style={Muted},tick style={Muted},grid=major,grid style={Line,line width=0.25pt},
+  legend style={font=\scriptsize,draw=none,fill=Paper},unbounded coords=jump}}
+\setlecture{03}{Links, Topology, and Routing}
+\title{Links, Topology, and Routing}
+\author{Yi Ching (David) Chou}
+\date{}
+\begin{document}
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Paper] (current page.south west) rectangle (current page.north east);
+    \fill[Line] (current page.south west) rectangle ([yshift=0.18cm]current page.south east);
+    \fill[Ink] ([xshift=0.95cm,yshift=-0.95cm]current page.north west) rectangle ++(0.12cm,-5.35cm);
+    \node[anchor=north west,text=Muted] at ([xshift=1.35cm,yshift=-0.9cm]current page.north west)
+      {\small\bfseries SATNET EDU / Lecture 03};
+    \node[anchor=north west,align=left,text width=12.2cm]
+      at ([xshift=1.35cm,yshift=-1.65cm]current page.north west)
+      {{\fontsize{29}{33}\selectfont\bfseries Links, Topology,\\[0.12cm]and Routing}};
+    \node[anchor=north west,align=left,text width=11.6cm,text=Muted]
+      at ([xshift=1.38cm,yshift=-3.85cm]current page.north west)
+      {\small How usable links become end-to-end paths through a satellite network.};
+    \node[anchor=north west,fill=Ink,rounded corners=2pt,inner xsep=0.18cm,inner ysep=0.09cm,text=Paper]
+      (tag) at ([xshift=1.38cm,yshift=-4.78cm]current page.north west)
+      {\small\bfseries LECTURE 03};
+    \node[anchor=west,align=left,text width=9.5cm] at ([xshift=0.28cm]tag.east)
+      {\small From physical visibility to a routing decision};
+    \draw[Ink,line width=1.1pt] ([xshift=1.38cm,yshift=-5.55cm]current page.north west) -- ++(10.9cm,0);
+    \node[anchor=north,align=center,text=Muted] at ([yshift=-5.85cm]current page.north)
+      {\small Build the graph. Choose an objective. Explain the route.};
+    \node[anchor=north,align=center] at ([yshift=-6.65cm]current page.north)
+      {\small Instructor: Yi Ching (David) Chou};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]{A Route Needs Both Ground and Space Links}
+  \context{Coverage supplies a possible first hop. Reaching another terminal also requires a connected path.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Ground links enter and leave space.}{\item A terminal uses a ground--satellite link. A gateway can connect a satellite network to terrestrial infrastructure.}
+        \point{Space links join satellites.}{\item An inter-satellite link (ISL) carries traffic between satellites. Radio or optical terminals must establish that link.}
+        \point{Every hop must be usable.}{\item Two covered ground sites can still be disconnected when their satellites have no connecting chain.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Trace a path from terminal U to terminal V}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\pic[scale=0.75] at (0.7,0.8) {terminal};
+\pic[scale=0.75] at (6.15,0.8) {terminal};
+\pic[scale=0.85] at (1.2,3.4) {satellite};
+\pic[scale=0.85] at (3.5,3.4) {satellite};
+\pic[scale=0.85] at (5.8,3.4) {satellite};
+\draw[flow] (0.8,1.3)--(1.1,2.95);
+\draw[flow] (1.85,3.4)--(2.8,3.4);
+\draw[flow] (4.15,3.4)--(5.1,3.4);
+\draw[flow] (5.9,2.95)--(6.12,1.3);
+\node[lab] at (0.65,0.15) {U};\node[lab] at (6.2,0.15) {V};
+\node[smalllab] at (0.25,2.1) {Ground\\link};
+\node[smalllab] at (6.6,2.1) {Ground\\link};
+\node[lab] at (3.5,4.05) {Inter-satellite links};
+\node[box,text width=3.1cm] at (3.5,1.45) {Access at each end\\+ a connected space segment};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Generic architecture. The SatNet Edu ground stations are endpoints, not terrestrial transit routers.}
+  \note{Ask students to identify every required edge before naming a routing algorithm. Optical terminals require acquisition and pointing. Background: https://www.esa.int/Applications/Connectivity\_and\_Secure\_Communications/EDRS/Laser\_communications}
+\end{frame}
+
+\begin{frame}[fragile]{A Nearby Satellite Can Still Be Hidden by Earth}
+  \context{An ISL candidate needs a clear line of sight as well as an acceptable distance.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Test the entire line segment.}{\item The straight segment joining two satellites must stay outside Earth. A short distance alone cannot establish visibility.}
+        \point{Altitude sets the grazing limit.}{\item For equal orbital radii $r=R+h$, the grazing separation is $d_{\max}=2\sqrt{r^2-R^2}$.}
+        \point{Geometry is only one filter.}{\item Hardware range, pointing, terminal availability, and scheduling can remove otherwise visible links.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Clear, blocked, and grazing links}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\filldraw[fill=Soft,draw=Muted] (3.3,1.95) circle (1.40);
+\node[lab] at (3.3,1.75) {Earth};
+\coordinate (L) at (0.7,3.55);\coordinate (Q) at (5.9,3.55);
+\draw[net,line width=1pt] (L)--node[weight,above]{Clear}(Q);
+\foreach \p in {L,Q}{\fill[Ink] (\p) circle (0.055);}
+\draw[net,dashed] (0.65,2.1)--(5.95,2.1);
+\node[smalllab,fill=Paper] at (3.3,2.1) {Blocked};
+\draw[Muted,densely dotted] (0.7,3.35)--(5.9,3.35);
+\node[smalllab,anchor=north east] at (5.95,3.25) {Grazing};
+\draw[faint] (3.3,1.95)--(3.3,3.35) node[midway,right,smalllab] {$R$};
+\node[lab] at (3.3,0.0) {At 550 km: grazing distance $\approx 5408$ km};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Spherical Earth, $R=6371$ km. The simulator blocks exact tangency. Diagram is schematic.}
+  \note{At a grazing link the center-to-tangent radius is perpendicular to the chord. Each half-chord has length sqrt(r squared minus R squared). This gives about 5407.6 km at 550 km altitude. It is a geometric upper limit, not an operational laser range.}
+\end{frame}
+
+\begin{frame}[fragile]{A Ground Link Gets Longer Near the Horizon}
+  \context{The same orbit gives different link distances as a satellite crosses the terminal\textquotesingle s sky.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Elevation determines slant range.}{\item The slant range $d$ is the straight terminal-to-satellite distance. It equals altitude only for an overhead satellite.}
+        \point{Distance sets propagation time.}{\item For a space radio link, $t_p=d/c$. A 550 km overhead link takes about 1.83 ms in one direction.}
+        \point{A mask trades reach for geometry.}{\item Raising the minimum elevation removes longer, low-angle links and reduces the footprint established in Lecture 02.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{550 km altitude, one ground link}
+
+\begin{tikzpicture}
+\begin{axis}[courseaxis,xmin=10,xmax=90,ymin=0,ymax=2000,
+xtick={10,25,45,65,90},ytick={0,550,1000,1500,2000},
+xlabel={Elevation (degrees)},ylabel={Slant range (km)}]
+\addplot[Ink,line width=1pt,domain=10:90,samples=100] {sqrt(6921^2-6371^2*cos(x)^2)-6371*sin(x)};
+\addplot[only marks,mark=*,Ink] coordinates {(90,550) (25,1123.278)};
+\end{axis}
+\end{tikzpicture}
+\par\vspace{0.12cm}{\footnotesize $d=\sqrt{(R+h)^2-R^2\cos^2 e}-R\sin e$\par}
+    \end{column}
+  \end{columns}
+  \assumption{$R=6371$ km, $h=550$ km, elevation $e$, $c=299792.458$ km/s. Propagation only.}
+  \note{The range formula follows from the triangle of Earth center, terminal and satellite. At 25 degrees range is about 1123 km and propagation is about 3.75 ms. Two ground links and any ISLs contribute separately to a route.}
+\end{frame}
+
+\begin{frame}[fragile]{A Topology Policy Chooses Which Links to Test}
+  \context{A physically possible pair is not automatically an installed or scheduled connection.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Start with candidate pairs.}{\item A regular constellation can nominate neighbors along each orbital plane and across nearby planes.}
+        \point{Apply geometry and status filters.}{\item A candidate becomes a usable edge only when its endpoints are enabled, its range is allowed, and Earth is clear.}
+        \point{A denser policy has a cost.}{\item Testing all satellite pairs admits more candidates. Real systems still have finite terminals and pointing constraints.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Candidates become a time-specific graph}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\node[box,text width=5.3cm] (a) at (3.3,4.05) {Candidate pairs\\orbital neighbors or all pairs};
+\node[box,text width=5.3cm] (b) at (3.3,2.90) {Enabled endpoints + distance + visibility};
+\node[box,draw=Ink,text width=5.3cm] (c) at (3.3,1.75) {Usable edges at time $t$};
+\draw[flow] (a)--(b);\draw[flow] (b)--(c);
+\node[lab] at (3.3,0.55) {$N=72:\quad N(N-1)/2=2556$ pairs};
+\node[smalllab,text=Muted] at (3.3,0.08) {All-pairs count excludes self-links and duplicates};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{SatNet Edu supports orbital-neighbor and distance policies. It does not allocate real antenna terminals.}
+  \note{Separate candidate generation from physical filtering. All-pairs candidate count is N choose two. Neighbor policy does not guarantee a fixed realized degree because links can fail a filter. See docs/MODEL.md.}
+\end{frame}
+
+\begin{frame}[fragile]{Represent Each Snapshot as a Weighted Graph}
+  \context{Once usable links are known, a routing question can be expressed as a graph problem.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Vertices represent network objects.}{\item Write $G(t)=(V,E(t))$. Satellites and ground endpoints are vertices. Each usable link is an edge at time $t$.}
+        \point{Weights express the objective.}{\item Unit weights count hops. Propagation weights use distance divided by signal speed. Different weights can select different paths.}
+        \point{Respect forwarding permissions.}{\item In SatNet Edu, a ground station may start or end a route. It cannot be an intermediate satellite-to-satellite relay.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{From links to an adjacency table}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\node[dot] (U) at (0.6,3.3) {U};\node[dot] (A) at (2.35,3.3) {A};
+\node[dot] (B) at (4.1,3.3) {B};\node[dot] (V) at (5.9,3.3) {V};
+\draw[net] (U)--node[weight,above]{2}(A)--node[weight,above]{5}(B)--node[weight,above]{2}(V);
+\node[smalllab] at (0.6,2.6) {Ground};\node[smalllab] at (2.35,2.6) {Satellite};
+\node[smalllab] at (4.1,2.6) {Satellite};\node[smalllab] at (5.9,2.6) {Ground};
+\node[lab,align=left] at (3.35,1.35) {U: A (2 ms)\\A: U (2 ms), B (5 ms)\\B: A (5 ms), V (2 ms)\\V: B (2 ms)};
+\node[lab] at (3.35,0.15) {One route: 3 links, $2+5+2=9$ ms};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed graph with undirected links. Edge labels are one-way propagation milliseconds.}
+  \note{Hop count is the number of edges, not the number of intermediate satellites. Disabled objects retain positions in a snapshot but have no incident usable links.}
+\end{frame}
+
+\begin{frame}[fragile]{The Fewest Hops Need Not Give the Least Delay}
+  \context{A route with fewer links may still travel a longer total distance.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Compare complete route sums.}{\item The upper path A--B--D uses two links and costs 12 ms. The lower path uses three links and costs 9 ms.}
+        \point{Choose a metric before optimizing.}{\item Minimum hops selects the upper path. Minimum propagation delay selects the lower path in this graph.}
+        \point{Keep the claim specific.}{\item A minimum-propagation route need not minimize real packet latency when queues, processing, or transmission times differ.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two objectives, two answers}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.55);
+
+\node[dot] (A) at (0.45,2) {A};
+\node[dot] (B) at (3.2,3.55) {B};
+\node[dot] (C) at (2.05,0.7) {C};
+\node[dot] (E) at (4.35,0.7) {E};
+\node[dot] (D) at (6.2,2) {D};
+\draw[net,line width=1.1pt] (A)--node[weight,above left]{6}(B)--node[weight,above right]{6}(D);
+\draw[net,dashed] (A)--node[weight,below left]{3}(C)--node[weight,below]{3}(E)--node[weight,below right]{3}(D);
+\node[smalllab,text=Muted] at (3.35,4.15) {All edge weights are propagation delays in ms};
+
+\end{tikzpicture}\par\vspace{0.12cm}{\footnotesize Hops: A--B--D\qquad Delay: A--C--E--D\par}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed weighted graph. All edges have nonnegative propagation delay. No queueing model.}
+  \note{The paths cost 6+6=12 and 3+3+3=9 ms. This counterexample disproves equivalence between hop count and propagation. The source and destination here are generic graph nodes.}
+\end{frame}
+
+\begin{frame}[fragile]{Dijkstra Expands the Cheapest Unfinished Route}
+  \context{Nonnegative link delays let us settle the smallest tentative distance first.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Start at the source.}{\item Set distance to A to zero and all others to infinity. Visiting A gives tentative costs B=6 and C=3.}
+        \point{Relax each outgoing edge.}{\item From a settled vertex $u$, replace a larger estimate for $v$ with $d(u)+w(u,v)$ and remember the predecessor.}
+        \point{Stop when the target is settled.}{\item This graph reaches D at 9 ms through E. A discovered route is only tentative until it wins the comparison.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A worked shortest-path calculation}
+{\scriptsize Edges (ms): AB=6, BD=6, AC=3, CE=3, ED=3\par}{\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lllll@{}}\toprule
+\textbf{Settled} & \textbf{B} & \textbf{C} & \textbf{E} & \textbf{D} \\ \midrule
+A (0) & 6 & 3 & $\infty$ & $\infty$ \\
+C (3) & 6 & 3 & 6 & $\infty$ \\
+B (6) & 6 & 3 & 6 & 12 \\
+E (6) & 6 & 3 & 6 & 9 \\
+D (9) & 6 & 3 & 6 & 9 \\
+\bottomrule\end{tabular}\par}\par\vspace{0.12cm}{\footnotesize Predecessors: D $\leftarrow$ E $\leftarrow$ C $\leftarrow$ A\par}\par\vspace{0.12cm}{\footnotesize $d(v)\gets\min\{d(v),\ d(u)+w(u,v)\}$\par}
+    \end{column}
+  \end{columns}
+  \assumption{Costs in ms. B is expanded before E for this equal-cost tie. Either order gives the same minimum cost.}
+  \note{Explain relaxation by comparing candidate 6+3=9 from E with the previous D estimate 12. Dijkstra requires nonnegative weights. Implementation uses additional deterministic tie breakers, described in docs/MODEL.md.}
+\end{frame}
+
+\begin{frame}[fragile]{Coverage at Both Ends Does Not Prove Connectivity}
+  \context{A route requires a continuous chain through the graph, not merely a first and last hop.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{A missing bridge can split the graph.}{\item Both terminals may keep access links while the only connection between their satellite groups disappears.}
+        \point{An alternate chain creates resilience.}{\item A second route helps only if it avoids the failed links or nodes. Two paths can share the same vulnerable component.}
+        \point{Represent no path explicitly.}{\item An unreachable sample has no valid delay. Replacing it with zero would make a disconnected design look fast.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Both sites covered, yet no end-to-end path}
+\begin{tikzpicture}[x=0.90cm,y=0.90cm]
+\path[use as bounding box] (-0.25,-0.2) rectangle (7.15,4.5);
+
+\node[dot] (U) at (0.3,2.4) {U};\node[dot] (A) at (1.7,3.3) {A};
+\node[dot] (B) at (2.0,1.4) {B};\node[dot] (C) at (4.6,3.3) {C};
+\node[dot] (D) at (4.9,1.4) {D};\node[dot] (V) at (6.3,2.4) {V};
+\draw[net] (U)--(A)--(B)--(U);\draw[net] (V)--(C)--(D)--(V);
+\draw[Muted,dashed] (A)--(C);
+\draw[Ink,line width=1pt] (3.0,3.1)--(3.4,3.5) (3.0,3.5)--(3.4,3.1);
+\node[smalllab] at (3.2,3.9) {Unavailable bridge};
+\node[box] at (1.2,0.3) {U has access};\node[box] at (5.2,0.3) {V has access};
+\node[lab] at (3.2,-0.12) {};
+
+\end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Constructed graph. Solid lines are usable. The dashed bridge is absent from the routing graph.}
+  \note{The U-A-B and C-D-V triangles represent access to multiple satellites on each side. The ground endpoints are not used as intermediate relays. For the query U to V the result is no\_path.}
+\end{frame}
+
+\begin{frame}[fragile]{Compare Routing Objectives on the Same Snapshot}
+  \context{Use one recorded geometry to isolate what the route metric changes.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Hold the snapshot fixed.}{\item Query the same source, target, and time. Changing time as well as metric would mix two causes.}
+        \point{Inspect the selected paths.}{\item Compare node sequences, hop counts, and propagation sums. Equal answers are possible and are worth explaining.}
+        \point{Check reachability first.}{\item If no path exists, inspect access links and connected groups before comparing delay values.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two queries, one network state}
+
+\begin{lstlisting}
+snapshot = net.at(120)
+for metric in ("hops", "delay"):
+    route = snapshot.route(
+        "A", "B", metric=metric)
+    if route.reachable:
+        print(metric, route.path)
+        print(route.hops,
+              route.propagation_ms)
+    else:
+        print(metric, route.reason)
+\end{lstlisting}
+\par\vspace{0.12cm}{\footnotesize Question: which extra links make a shorter route?\par}
+    \end{column}
+  \end{columns}
+  \assumption{Run with the companion routing\_experiment.py. SatNet Edu optimizes snapshots, not a distributed routing protocol.}
+  \note{The companion constructs the network, records both RouteQuery objects, and exports the English viewer. There is no forwarding-table convergence or queue simulation.}
+\end{frame}
+\end{document}

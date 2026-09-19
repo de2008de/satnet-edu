@@ -1,0 +1,325 @@
+% Native editable Beamer slides. Build from the repository root.
+\documentclass[aspectratio=169,11pt,handout,t]{beamer}
+\makeatletter
+\def\input@path{{../}}
+\makeatother
+\usepackage{satnetslides}
+\usepackage{textcomp}
+\usepackage{listings}
+\input{../lecture-01/icons.tex}
+\lstset{language=Python,basicstyle=\ttfamily\fontsize{7.5}{9.5}\selectfont,
+  keywordstyle=\bfseries\color{Ink},commentstyle=\color{Muted},
+  stringstyle=\color{Muted},showstringspaces=false,columns=fullflexible,
+  upquote=true,keepspaces=true,frame=single,rulecolor=\color{Line},xleftmargin=3pt,xrightmargin=3pt}
+\tikzset{box/.style={draw=Line,fill=Soft,rounded corners=1pt,font=\scriptsize,
+  align=center,minimum height=0.65cm,inner sep=4pt},
+  dot/.style={circle,draw=Ink,fill=Paper,minimum size=0.50cm,inner sep=0pt,font=\scriptsize\bfseries}}
+\pgfplotsset{courseaxis/.style={width=6.6cm,height=4.0cm,
+  label style={font=\scriptsize},tick label style={font=\scriptsize},
+  axis line style={Muted},tick style={Muted},grid=major,grid style={Line,line width=0.25pt},
+  legend style={font=\scriptsize,draw=none,fill=Paper},unbounded coords=jump}}
+
+\setlecture{01}{Experiments with SatNet Edu}
+\title{Experiments with SatNet Edu}
+\author{Yi Ching (David) Chou}
+\date{}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.86\paperwidth,ht=2.8ex,dp=1.2ex,leftskip=0.7cm]{footline}
+      SATNET EDU\quad Lab 01\quad Experiments with SatNet Edu
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.14\paperwidth,ht=2.8ex,dp=1.2ex,rightskip=0.7cm]{footline}
+      \hfill\insertframenumber/\inserttotalframenumber
+    \end{beamercolorbox}%
+  }%
+}
+\begin{document}
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Paper] (current page.south west) rectangle (current page.north east);
+    \fill[Line] (current page.south west) rectangle ([yshift=0.18cm]current page.south east);
+    \fill[Ink] ([xshift=0.95cm,yshift=-0.95cm]current page.north west) rectangle ++(0.12cm,-5.35cm);
+    \node[anchor=north west,text=Muted] at ([xshift=1.35cm,yshift=-0.9cm]current page.north west)
+      {\small\bfseries SATNET EDU / Lab 01};
+    \node[anchor=north west,align=left,text width=12.2cm]
+      at ([xshift=1.35cm,yshift=-1.65cm]current page.north west)
+      {{\fontsize{29}{33}\selectfont\bfseries Experiments with\\[0.12cm]SatNet Edu}};
+    \node[anchor=north west,align=left,text width=11.6cm,text=Muted]
+      at ([xshift=1.38cm,yshift=-3.85cm]current page.north west)
+      {\small Build a network, record its behavior, and explain a controlled change.};
+    \node[anchor=north west,fill=Ink,rounded corners=2pt,inner xsep=0.18cm,inner ysep=0.09cm,text=Paper]
+      (tag) at ([xshift=1.38cm,yshift=-4.78cm]current page.north west)
+      {\small\bfseries LAB 01};
+    \node[anchor=west,align=left,text width=9.5cm] at ([xshift=0.28cm]tag.east)
+      {\small A guided Vancouver--Tokyo experiment};
+    \draw[Ink,line width=1.1pt] ([xshift=1.38cm,yshift=-5.55cm]current page.north west) -- ++(10.9cm,0);
+    \node[anchor=north,align=center,text=Muted] at ([yshift=-5.85cm]current page.north)
+      {\small Write Python. Inspect the recording. Compare the outcomes.};
+    \node[anchor=north,align=center] at ([yshift=-6.65cm]current page.north)
+      {\small Instructor: Yi Ching (David) Chou};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]{1. Install the Simulator in One Python Environment}
+\context{Use Git, Python 3.11, a text editor, and a browser. Run the commands from your working folder.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Get the repository and enter it.}{\item Clone the project once. All later lab commands run from the folder containing the project README.}
+\point{Keep installation and execution together.}{\item Create a virtual environment. The variable \texttt{\$py} selects that environment for every Python command below.}
+\point{Check that the package imports.}{\item The final command should print OK. If it fails, check the interpreter and installation output before continuing.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{Windows PowerShell setup}
+\begin{lstlisting}[language={}]
+git clone `
+  https://github.com/de2008de/satnet-edu.git
+cd satnet-edu
+py -3.11 -m venv .venv
+$py = ".\.venv\Scripts\python.exe"
+& $py -m pip install .
+& $py -c "import satnet_edu; print('OK')"
+\end{lstlisting}\par\vspace{0.16cm}{\scriptsize Use the lab README for macOS/Linux commands.\\No Docker or LaTeX is needed to run the simulator.\par}
+\end{column}
+\end{columns}
+\assumption{Keep this PowerShell window open so \texttt{\$py} remains defined. Internet is needed for cloning and installation.}
+\note{The semicolon in the import command is Python syntax. The Windows launcher selects Python 3.11. An already cloned teaching checkout can be used directly. Students need neither a web server nor Node.js.}
+\end{frame}
+
+\begin{frame}[fragile]{2. Build a Constellation with a Fixed Start Time}
+\context{Follow the numbered sections in teaching/lab-01/experiment.py from the repository root.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Create one network object.}{\item Give the experiment a name and a fixed UTC epoch. Equal elapsed times then refer to equal dates in both runs.}
+\point{Specify the constellation.}{\item Six orbital planes with twelve satellites each give 72 satellites. Altitude is in kilometers and inclination in degrees.}
+\point{Identify what is still missing.}{\item The network has satellites, but no ground endpoints yet. The next step adds the two sites and link rules.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{Section 1: initialize the orbit configuration}
+\begin{lstlisting}[language={Python}]
+from satnet_edu import Network, RouteQuery
+
+net = Network(
+    "Lab 01",
+    epoch="2026-01-01T00:00:00Z")
+net.add_constellation(
+    planes=6, sats_per_plane=12,
+    altitude_km=1000,
+    inclination_deg=53,
+)
+\end{lstlisting}\par\vspace{0.16cm}{\scriptsize Checkpoint: $6\times12=72$ satellites, one fixed epoch.\par}
+\end{column}
+\end{columns}
+\assumption{The supplied script is complete. Work through its sections, then execute the file from the repository root.}
+\note{The constellation is synthetic. The fixed epoch is for repeatability and does not request historical operator data. Students can copy the code into their own script instead of editing the supplied version.}
+\end{frame}
+
+\begin{frame}[fragile]{3. Add Ground Sites and Define Usable Links}
+\context{Connect the same constellation to Vancouver and Tokyo using stable endpoint IDs A and B.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Give each endpoint a stable ID.}{\item A and B identify the endpoints in code. City labels make the map easier to read. West longitude is negative.}
+\point{Select candidate space links.}{\item The orbital-neighbor policy considers neighboring satellites. A candidate still needs clear geometry and an allowed range.}
+\point{Set the access and range limits.}{\item The $10^\circ$ mask filters ground access. The 4000 km limit filters only inter-satellite links.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{Section 2: endpoints and link policy}
+\begin{lstlisting}[language={Python}]
+net.add_ground_station(
+    "A", lat=49.28, lon=-123.12,
+    label="Vancouver")
+net.add_ground_station(
+    "B", lat=35.68, lon=139.69,
+    label="Tokyo")
+net.set_link_policy(
+    topology="orbital_neighbors",
+    max_isl_km=4000,
+    min_elevation_deg=10,
+)
+\end{lstlisting}
+\end{column}
+\end{columns}
+\assumption{Ground stations are route endpoints in this model. No terrestrial connection between the two cities is added.}
+\note{The public API names and units match docs/API.md. The ISL distance cutoff does not apply to ground links. Both endpoints remain enabled throughout this lab.}
+\end{frame}
+
+\begin{frame}[fragile]{4. Inspect One Route Before Recording a Run}
+\context{Query a single snapshot at 120 seconds to check that the scenario can answer your question.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Ask a specific routing question.}{\item Find the minimum-propagation path from A to B at one fixed time. Snapshot queries do not advance a live clock.}
+\point{Check reachability first.}{\item Use the path, hop count, and delay only when \texttt{reachable} is true. Otherwise inspect the reported reason.}
+\point{Interpret the units correctly.}{\item The delay is one-way propagation in milliseconds. It excludes queueing, packet transmission, processing, and server work.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{Section 3: query and inspect}
+\begin{lstlisting}[language={Python}]
+route = net.at(120).route(
+    "A", "B", metric="delay")
+if route.reachable:
+    print(route.path)
+    print(route.hops)
+    print(route.propagation_ms)
+else:
+    print(route.reason)
+\end{lstlisting}\par\vspace{0.16cm}{\scriptsize Reference run: 4 links and about 35.307 ms.\\Path: A $\to$ S05-04 $\to$ S04-04 $\to$ S04-03 $\to$ B.\par}
+\end{column}
+\end{columns}
+\assumption{Reference values use the supplied fixed scenario. No path is a valid result for a different configuration.}
+\note{An unknown ID is an input error, while no\_path means known enabled endpoints have no connected chain. A route path includes its two ground endpoints.}
+\end{frame}
+
+\begin{frame}[fragile]{5. Record the Baseline and Export a Viewer}
+\context{A recording stores the network states and route answers that the browser will later replay.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Record the query you need.}{\item \texttt{RouteQuery} gives the A-to-B query the name delay. Omitting recorded queries leaves the viewer without route results.}
+\point{Choose duration and sample interval.}{\item The lab records 1200 seconds every 10 seconds. Including both endpoints gives 121 samples.}
+\point{Save both data and presentation.}{\item JSON preserves the recording. The standalone HTML viewer opens in a browser after Python has finished.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{Section 4: reusable recording function}
+\begin{lstlisting}[language={Python}]
+from pathlib import Path
+def record(network, label):
+    run = network.run(
+        duration_s=1200, step_s=10,
+        record_routes=[
+            RouteQuery("delay", "A", "B")])
+    folder = Path("outputs/lab-01")
+    run.save(folder / f"{label}.json")
+    run.export_html(folder / f"{label}.html")
+    return run
+baseline = record(net, "baseline")
+\end{lstlisting}
+\end{column}
+\end{columns}
+\assumption{This script exports English viewers. Playback speed changes replay speed, not the simulation sample interval.}
+\note{The record function is reused unchanged for the failure scenario. The complete script imports Path at the top. Run.save creates the parent output directory before the HTML is exported.}
+\end{frame}
+
+\begin{frame}[fragile]{6. Run the File and Inspect Recorded Samples}
+\context{Execute the supplied script, then open outputs/lab-01/baseline.html in your browser.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Run the complete experiment.}{\item In PowerShell use \texttt{\& \$py teaching/lab-01/experiment.py}. This produces both recordings.}
+\point{Pause and choose a recorded time.}{\item Use Play, Pause, and Next sample. Select the delay query and inspect the path, link hops, and propagation value.}
+\point{Inspect the objects on a route.}{\item Open Object inspector and select a satellite or link. Use link distances to explain the propagation delay.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{A repeatable viewer inspection sequence}
+\begin{tikzpicture}[x=0.9cm,y=0.9cm]
+\path[use as bounding box] (-0.2,-0.2) rectangle (7.1,4.5);
+
+\node[box,text width=5.35cm] (a) at (3.35,4.0) {1. Open baseline.html\\Select recorded query: delay};
+\node[box,text width=5.35cm] (b) at (3.35,2.65) {2. Pause at 120 s\\Read path, hops, and propagation};
+\node[box,text width=5.35cm] (c) at (3.35,1.3) {3. Expand Object inspector\\Select a node or link};
+\draw[flow] (a)--(b);\draw[flow] (b)--(c);
+\node[smalllab,text=Muted] at (3.35,0.2) {The browser replays data. Edit Python to change the network.};
+
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\assumption{UI labels match the current English player. The map projects satellite subpoints onto longitude and latitude.}
+\note{Students can drag the recorded-time control or step through samples. If a query is Not recorded, add it to record\_routes and rerun Python. If no path exists at a sample, inspect the available ground links first.}
+\end{frame}
+
+\begin{frame}[fragile]{7. Change Only the Failure Schedule}
+\context{Create a second scenario from the baseline and disable one satellite during a known interval.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Choose a node using a stated rule.}{\item At 600 seconds, select the middle node on the baseline route. Check that a route exists before indexing its path.}
+\point{Clone instead of rebuilding by hand.}{\item Copy the complete scenario so the epoch, constellation, endpoint locations, and link policy stay identical.}
+\point{Keep the recording window fixed.}{\item Disable the chosen satellite from 600 s up to, but not including, 900 s. Reuse the same recording function.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{Section 5: targeted satellite outage}
+\begin{lstlisting}[language={Python}]
+r = net.at(600).route("A", "B")
+if not r.reachable or len(r.path) < 3:
+    raise RuntimeError("Need a route")
+failed_id = r.path[len(r.path) // 2]
+failed = Network.from_dict(net.to_dict())
+failed.add_failure(
+    node_id=failed_id,
+    start_s=600, end_s=900)
+failure = record(failed, "failure")
+\end{lstlisting}\par\vspace{0.16cm}{\scriptsize Reference selection: S04-03.\\Open failure.html next to baseline.html at the same time.\par}
+\end{column}
+\end{columns}
+\assumption{The node is disabled on $[600,900)$. This is a targeted stress case, not a random reliability estimate.}
+\note{The selected interior node must be a satellite because ground stations cannot relay. Disabled satellites keep their recorded position but have no usable links. No routing-protocol convergence delay is modeled.}
+\end{frame}
+
+\begin{frame}[fragile]{8. Compare Reachability and Delay Separately}
+\context{Read summary.json and paired.csv, then connect the numerical outcomes to the recorded paths.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Count all samples for reachability.}{\item Divide reachable samples by all recorded samples. Keep unavailable samples in this denominator.}
+\point{Average delay over reachable samples.}{\item A no-path result has no valid delay. Never replace it with zero before calculating a mean.}
+\point{Compare paths at matched times.}{\item Use the CSV and both viewers at 600, 700, and 900 s. Explain a changed path, an unchanged path, or a disconnection.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{Section 6: reachability and conditional delay}
+\begin{lstlisting}[language={Python}]
+frames = baseline.to_dict()["frames"]
+routes = [f["routes"][0] for f in frames]
+valid = [r for r in routes
+         if r["status"] == "reachable"]
+fraction = len(valid) / len(routes)
+mean_ms = (
+    sum(r["propagation_ms"] for r in valid)
+    / len(valid) if valid else None)
+\end{lstlisting}\par\vspace{0.16cm}{\scriptsize \begin{tabular}{@{}lrr@{}}\toprule
+Case & Reachable & Mean delay\\\midrule
+Baseline & 121/121 & 35.584 ms\\
+Failure & 121/121 & 35.805 ms\\\bottomrule
+\end{tabular}\par}
+\end{column}
+\end{columns}
+\assumption{Table: checked reference run. Delay means one-way propagation, conditional on a route. Sample fractions are not continuous availability.}
+\note{The complete script applies summarize to both recordings and exports paired paths and delays. This case remains reachable at every recorded sample while some paths become longer. That is a valid and informative failure result.}
+\end{frame}
+
+\begin{frame}[fragile]{9. Submit a Reproducible Experimental Report}
+\context{A successful lab result shows what changed, why it changed, and what the model can establish.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}\raggedright
+\begin{teachingpoints}
+\point{Preserve a reproducible experiment.}{\item Submit your script, both JSON recordings, and both HTML viewers. State the failure ID and interval.}
+\point{Explain one matched observation.}{\item Compare the baseline and failure paths at the same time. Relate the changed links to reachability and propagation delay.}
+\point{Check one limitation experimentally.}{\item Save the first outputs. Change only the step from 10 s to 5 s and rerun. Compare the two sets of metrics.}
+\end{teachingpoints}
+\end{column}
+\begin{column}{0.49\textwidth}\centering
+\figtitle{A short report with concrete checkpoints}
+\begin{tikzpicture}[x=0.9cm,y=0.9cm]
+\path[use as bounding box] (-0.2,-0.2) rectangle (7.1,4.5);
+
+\node[box,text width=5.45cm] at (3.35,4.0) {Prediction\\Will the route disconnect or find a detour?};
+\node[box,text width=5.45cm] at (3.35,2.65) {Observation\\Two paths at one time + a metric comparison};
+\node[box,text width=5.45cm] at (3.35,1.3) {Explanation\\Which link changes account for the result?};
+\node[smalllab,text width=5.8cm] at (3.35,0.1) {State the sample interval. Do not claim throughput or complete application latency.};
+
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\assumption{A 5-second step gives 241 samples over 1200 seconds. Keep the 10-second outputs in a separate folder before rerunning.}
+\note{The script overwrites its named lab output files on rerun. Ask for a short paragraph on prediction, observed paths, metric definitions, and one limitation. An unchanged metric can be explained rather than manufactured into an improvement.}
+\end{frame}
+\end{document}
