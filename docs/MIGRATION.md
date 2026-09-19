@@ -16,3 +16,8 @@ Historical filenames remain under handoff for provenance. They are not dependenc
 of a wheel installation. No UDTJ resources, server, Flask, React, account or CDN is needed.
 The original M1 minimal page is preserved in commit da5021a as milestone evidence.
 Its current replacement uses the same final player/parser as every other demo.
+
+The English edition supersedes the initial bilingual delivery. All maintained docs,
+sample names, exported pages and interface text are English. `language="en"` remains
+accepted; other language values are rejected explicitly. Original handoff materials
+remain unchanged for provenance rather than being rewritten as product documentation.

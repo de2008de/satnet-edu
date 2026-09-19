@@ -11,7 +11,7 @@ def main():
     e = sub.add_parser("export-html", help="Package a trace without simulating")
     e.add_argument("trace")
     e.add_argument("--output", required=True)
-    e.add_argument("--language", choices=["en", "zh"], default="en")
+    e.add_argument("--language", choices=["en"], default="en")
     args = p.parse_args()
     try:
         run = load(args.trace)

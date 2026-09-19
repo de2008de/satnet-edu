@@ -4,6 +4,11 @@ Executed on Windows x64, Python 3.11.15, ephem 4.2.1, sgp4 2.27, astropy 8.0.1,
 jsonschema 4.26.0, Playwright 1.63.0, locally installed Edge/Chromium and Node 22.13.1.
 Exact Python dependency snapshot: requirements-lock.txt (no editable machine paths).
 
+The English-edition revision reran the 50 Python tests, ESM contract checks and browser
+integration successfully. Screenshots and exported examples now show the English
+interface. The original performance measurements below remain unchanged; this
+language revision does not alter the simulation model.
+
 ## Completed checks
 
 | Command / check | Observed result |
@@ -27,8 +32,8 @@ safe script embedding, synchronized shipped schemas and player assets.
 Browser integration covers file:// self-contained HTML with networking disabled,
 file import and drag/drop, play/pause/end/restart/seek clamping, single frame, query
 switches, missing vs unreachable data, fault/recovery, visible invalid-file errors,
-node inspector, English/Chinese, keyboard Enter and visible focus, fixed map viewBox,
-world seam splitting at both map centers, narrow-screen overflow, malicious Chinese
+node inspector, English text, keyboard Enter and visible focus, fixed map viewBox,
+world seam splitting at both map centers, narrow-screen overflow, malicious Unicode
 labels with script/HTML tokens, two independent players, host CSS isolation, reload,
 destroy and a separate HTTP-served ESM instance. Current results and paths are checked
 against Python trace values for multiple queries/times. Browser screenshots were

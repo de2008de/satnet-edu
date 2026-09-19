@@ -64,7 +64,7 @@ use the dependency versions recorded in the trace for reruns.
 `Run.to_dict()` returns a deep copy. `Run.save(path, pretty=False, max_bytes=134217728)`
 validates and returns an absolute Path. `satnet_edu.load(path, max_bytes=...)` performs
 strict JSON/schema/semantic validation. `Run.export_html(path, language="en")` accepts
-en/zh, validates and packages existing records only. Default file protection is
+English (`en`) only, validates and packages existing records only. Default file protection is
 128 MiB. No silent decimation. JSON serialization rejects NaN and Infinity.
 
 ## Embedding
@@ -95,3 +95,7 @@ listeners, removes the root and releases records. No framework/server, host styl
 global element IDs, remote assets, telemetry, propagation or routing dependency.
 Nodes/links can be selected from the keyboard-accessible inspector list. File input
 and drag/drop read only the user-selected file, without uploads.
+
+This edition uses English throughout and has no language switcher. The optional
+`language` argument remains for API compatibility but only accepts `"en"`.
+User-supplied labels still support Unicode and are displayed safely as text.

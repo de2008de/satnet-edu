@@ -2,7 +2,6 @@ const CSS = __PLAYER_CSS__;
 const COASTLINES = __COASTLINES__;
 const WORDS = {
   en:{import:'Import JSON',language:'Language',play:'Play',pause:'Pause',previous:'Previous sample',next:'Next sample',start:'Beginning',time:'Recorded time',speed:'Speed',map:'The network, on a map',pacific:'Pacific-centred',greenwich:'Greenwich-centred',centre:'Map centre',satellite:'Satellite',ground:'Ground station',path:'Recorded path',links:'Other links',labels:'Labels',queries:'Recorded queries',query:'Select recorded query',result:'Current result',delay:'One-way propagation delay',distance:'Path distance',hops:'Link hops',inspect:'Object inspector',object:'Select a node or link',choose:'Choose an object',empty:'Import or drop a simulation trace to begin.',unrecorded:'Not recorded',unreachable:'No path at this sample',disabled:'Endpoint disabled at this sample',reachable:'Recorded path available',caption:'Satellite subpoints on a fixed longitude–latitude map. Select a node or link to inspect recorded data. Distances are three-dimensional.',hint:'To change the network or record another query, run Python again.',sample:'Sample',model:'Spherical Earth · discrete samples · propagation only',download:'Save JSON',credit:'Adapted from the UserGS research framework. Map: Natural Earth (public domain).',energy:'Energy: Not recorded',error:'Cannot load trace',noObject:'Choose an object on the map or from the list.',unavailable:'This link is not available at this sample.'},
-  zh:{import:'导入 JSON',language:'语言',play:'播放',pause:'暂停',previous:'上一采样',next:'下一采样',start:'回到开始',time:'实际采样时间',speed:'速度',map:'地图上的卫星网络',pacific:'太平洋居中',greenwich:'格林尼治居中',centre:'地图中心',satellite:'卫星',ground:'地面站',path:'已记录路径',links:'其他链路',labels:'标签',queries:'已记录查询',query:'选择已记录查询',result:'当前结果',delay:'单向传播时延',distance:'路径距离',hops:'链路跳数',inspect:'对象检查器',object:'选择节点或链路',choose:'选择对象',empty:'导入或拖入仿真记录即可开始。',unrecorded:'未记录',unreachable:'此采样时刻无路径',disabled:'此采样时刻端点失效',reachable:'已有记录路径',caption:'固定经纬度地图上的卫星星下点。点击节点或链路查看已记录数据；距离按三维坐标计算。',hint:'修改网络或增加查询后，请重新运行 Python。',sample:'采样',model:'球形地球 · 离散采样 · 仅传播时延',download:'保存 JSON',credit:'改编自 UserGS 研究框架。地图：Natural Earth（公有领域）。',energy:'电量：未记录',error:'无法载入记录',noObject:'点击地图或使用列表选择对象。',unavailable:'此采样时刻该链路不可用。'}
 };
 function el(tag, attrs={}, content) {
   const e=document.createElement(tag);
@@ -29,7 +28,7 @@ function createPlayer(container, options={}) {
   const style=el('style',{},CSS);root.append(style);
   const shell=el('section',{class:'player','aria-label':'SatNet Edu'});root.append(shell);
   const abort=new AbortController();const listen=(e,name,fn)=>e.addEventListener(name,fn,{signal:abort.signal});
-  let lang=options.language || 'en'; if(!WORDS[lang]) throw new Error('language: en or zh');
+  const lang='en'; requireData(options.language===undefined||options.language==='en','language','this edition supports English (en) only');
   const maxBytes=options.maxBytes ?? DEFAULT_MAX_BYTES;
   requireData(Number.isSafeInteger(maxBytes)&&maxBytes>0,'maxBytes','expected positive integer');
   let trace=null,index=0,queryId=null,selected=null,playing=false,raf=0,last=0,head=0,speed=60,dead=false,loadToken=0;
@@ -39,8 +38,7 @@ function createPlayer(container, options={}) {
   const header=el('header'),titlebox=el('div');titlebox.append(el('h1',{},'SatNet Edu'));refs.name=el('div',{class:'name'});titlebox.append(refs.name);header.append(titlebox);
   const headerControls=el('div',{class:'header-controls'}),importLabel=trans('label','import',{class:'full'});
   refs.file=el('input',{type:'file',accept:'.json,application/json',class:'file'});importLabel.append(refs.file);
-  const language=el('select',{'aria-label':'Language / 语言'});for(const [val,label] of [['en','English'],['zh','中文']])language.append(el('option',{value:val},label));language.value=lang;
-  listen(language,'change',()=>{lang=language.value;translate();draw();});headerControls.append(importLabel,language);header.append(headerControls);shell.append(header);
+  headerControls.append(importLabel);header.append(headerControls);shell.append(header);
   refs.error=el('p',{class:'error',role:'alert'});shell.append(refs.error);
   const toolbar=el('div',{class:'toolbar'});
   refs.play=button('play',()=>playing?pause():play(),{class:'primary','data-action':'play'});

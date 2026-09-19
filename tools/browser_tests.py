@@ -17,10 +17,10 @@ trace = json.loads(
     (ROOT / "examples/data/scheduled-failure.json").read_text(encoding="utf-8")
 )
 minimal = json.loads((ROOT / "examples/data/minimal.json").read_text(encoding="utf-8"))
-evil = '中文 " </script><script>globalThis.PWNED=true</script> <img src=x onerror=alert(1)> &'
+evil = 'Unicode café Ω " </script><script>globalThis.PWNED=true</script> <img src=x onerror=alert(1)> &'
 n = Network(evil)
 n.add_ground_station("A", lat=0, lon=0, label=evil)
-n.run(duration_s=0, step_s=5).export_html(OUT / "safe.html", "zh")
+n.run(duration_s=0, step_s=5).export_html(OUT / "safe.html")
 
 with sync_playwright() as p:
     browser = p.chromium.launch(channel="msedge", headless=True)
@@ -66,8 +66,8 @@ with sync_playwright() as p:
     page.evaluate("player.selectQuery('A-B-hops');player.seek(0)")
     page.locator('[data-node-id="A"] .node').click()
     assert "position_ecef_km" in page.locator("[data-role=inspection]").inner_text()
-    page.locator('select[aria-label="Language / 语言"]').select_option("zh")
-    assert "单向传播时延" in page.locator("section.player").inner_text()
+    assert "One-way propagation delay" in page.locator("section.player").inner_text()
+    assert page.locator("section.player").get_attribute("lang") == "en"
     page.locator("[data-role=centre]").select_option("0")
     page.locator("[data-role=labels]").check()
     page.set_viewport_size({"width": 390, "height": 844})
@@ -81,7 +81,7 @@ with sync_playwright() as p:
     )
     assert "query" in result and page.locator("[role=alert]").inner_text()
     page.evaluate("(data)=>player.load(data)", minimal)
-    assert "未记录" in page.locator("[data-role=status]").inner_text()
+    assert "Not recorded" in page.locator("[data-role=status]").inner_text()
     assert page.evaluate(
         "(()=>{try{player.selectQuery('absent');return false}catch{return true}})()"
     )
@@ -188,5 +188,5 @@ with sync_playwright() as p:
     server.server_close()
     browser.close()
 print(
-    "Browser integration passed: offline file, controls, recorded queries, faults, bilingual, narrow screen, hostile labels, two instances, reload/destroy, file import/drop; zero HTTP requests or page errors."
+    "Browser integration passed: offline file, controls, recorded queries, faults, English UI, narrow screen, hostile labels, two instances, reload/destroy, file import/drop; zero HTTP requests or page errors."
 )

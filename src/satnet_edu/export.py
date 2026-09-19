@@ -18,8 +18,8 @@ def safe_json(value):
 
 
 def export_html(trace, path, language="en"):
-    if language not in ("en", "zh"):
-        raise ValueError("language: expected en or zh")
+    if language != "en":
+        raise ValueError("language: this edition supports English (en) only")
     validate_trace(trace)
     payload = safe_json(trace)
     if len(payload.encode("utf-8")) > DEFAULT_MAX_BYTES:

@@ -11,7 +11,7 @@ It adapts the actual UserGS synthetic TLE/PyEphem path, with newly added physica
 link checks, generic ground stations, deterministic routes and immutable snapshots.
 The browser never propagates satellites or calculates a route.
 
-## 安装与运行 / Quick start
+## Installation and quick start
 
 Python 3.11 is the tested target. In a fresh Python 3.11 environment:
 
@@ -33,7 +33,8 @@ This Windows working copy already contains a Python 3.11 environment. From Power
 Open `outputs/experiment.html` or `outputs/scheduled-failure.html` directly in your
 browser. Python can be closed and networking disabled. The JSON importer at
 `web/demo/index.html` also opens from local files; import any generated trace.
-安装后无需 Node、Web server 或在线地图。HTML 可离线分享；JSON 可在独立播放器导入。
+No Node.js, web server or online map service is required after installation.
+HTML files can be shared offline; JSON files can be imported into the standalone player.
 
 ```python
 from satnet_edu import Network, RouteQuery
@@ -50,11 +51,16 @@ run = net.run(duration_s=1800, step_s=5, record_routes=[
     RouteQuery("A-B-hops", "A", "B", "hops"),
 ])
 run.save("outputs/my-network.json")
-run.export_html("outputs/my-network.html", language="zh")
+run.export_html("outputs/my-network.html")
 ```
 
-无路径是正常实验结果，指标为 null。未记录查询显示“未记录”；导入坏文件会明确报错。
-修改网络、端点或故障要重新运行 Python；播放器只切换已记录结果。
+A missing path is a normal experimental result, with null metrics. Unrecorded queries
+display "Not recorded"; invalid files produce a visible error. Run Python again after
+changing the network, endpoints or failures; the player only selects recorded results.
+
+The product interface, examples, exported pages and maintained documentation are in
+English. Original source materials under `handoff/` are preserved unchanged as
+historical evidence and are not the maintained product documentation.
 
 ## Examples and entry points
 
@@ -62,7 +68,7 @@ run.export_html("outputs/my-network.html", language="zh")
 |---|---|
 | examples/first_network.py | 72 satellites, Vancouver–Tokyo, 361 samples |
 | examples/compare_routes.py | delay and hops queries in the same recording |
-| examples/scheduled_failure.py | satellite/GS failures, recovery, unreachable polar endpoint, Chinese HTML |
+| examples/scheduled_failure.py | satellite/GS failures, recovery and an unreachable polar endpoint |
 | examples/custom_constellation.py | manual TLE parameters with distance-based candidates |
 | examples/minimal.py | original six-satellite M1 position/JSON closure |
 | web/demo/index.html | independent static file importer |

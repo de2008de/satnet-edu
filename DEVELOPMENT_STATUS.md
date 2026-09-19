@@ -66,3 +66,16 @@ Primary outputs: outputs/experiment.json and outputs/experiment.html,
 outputs/scheduled-failure.html, examples/data/scheduled-failure.json, and
 dist/satnet_edu-0.1.0-py3-none-any.whl. Output files can be regenerated from examples;
 small real traces and browser distributions are checked into the repository.
+
+## English edition — user-directed revision
+
+The English edition supersedes the bilingual interface noted in the original M3
+history. All maintained documentation, interface text, sample names and exported
+pages now use English. The language switcher was removed; API/CLI language options
+accept `en` only. Unicode user labels remain supported as data. Original files under
+handoff remain unchanged as provenance records, not maintained product documentation.
+
+Rebuilt the classic/ESM/wheel assets and offline examples, and refreshed the desktop
+and mobile screenshots. Validation: 50 Python tests passed; ESM accepted 2 valid
+files and rejected 8 corrupted files; English browser integration passed with zero
+HTTP requests during offline tests and zero page errors.

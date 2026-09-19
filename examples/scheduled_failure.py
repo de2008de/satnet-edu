@@ -4,7 +4,7 @@ from satnet_edu import Network, RouteQuery
 
 
 def make_network():
-    net = Network("A recorded outage · 失效与恢复")
+    net = Network("A recorded outage · failure and recovery")
     net.add_constellation(
         planes=2, sats_per_plane=12, altitude_km=1000, inclination_deg=53
     )
@@ -29,4 +29,4 @@ if __name__ == "__main__":
         ],
     )
     print(run.save("examples/data/scheduled-failure.json"))
-    print(run.export_html("outputs/scheduled-failure.html", language="zh"))
+    print(run.export_html("outputs/scheduled-failure.html"))
