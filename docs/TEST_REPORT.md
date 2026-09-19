@@ -83,7 +83,7 @@ results. No unavailable samples are dropped or bridged by invented links.
 
 The clean environment imports from its own site-packages, not src/. It runs examples
 from test-results/clean-install. The wheel contains both JSON schemas, bundled map,
-classic player/CSS, provenance, coordinate ADR and third-party notices. No fonts,
+classic player/CSS, coordinate ADR and third-party notices. No fonts,
 keys, private absolute paths or old research directories are bundled.
 
 Not tested: Firefox, Safari, actual mobile devices, assistive screen readers, operating

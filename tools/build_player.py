@@ -51,7 +51,6 @@ for folder, body in [
 print("Built classic, ESM and wheel player assets")
 for name in [
     "THIRD_PARTY_NOTICES.md",
-    "docs/PROVENANCE.md",
     "docs/ADR-001-coordinates-time.md",
 ]:
     (ROOT / "src/satnet_edu/assets" / Path(name).name).write_text(

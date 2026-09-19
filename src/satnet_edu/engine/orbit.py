@@ -1,6 +1,6 @@
 """Adapted from UserGS helpers/generate_tle.py, orbital_period.py, mean_motion.py.
 
-Original designator handling attributes Hypatia. See PROVENANCE and notices.
+Original designator handling attributes Hypatia. See THIRD_PARTY_NOTICES.md.
 Retains the original near-circle, constants, phase and mean-motion conversion.
 """
 

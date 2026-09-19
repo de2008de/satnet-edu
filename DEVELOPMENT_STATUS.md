@@ -51,7 +51,7 @@ M3 commit: d7f0512. M4 implementation and report are in the final `M4:` local co
   integration passed, including ESM and comparison to Python's recorded metrics.
 - Small, standard and larger benchmark scenarios completed; measurements and memory
   limitations recorded in docs/TEST_REPORT.md and docs/benchmark-results.json.
-- README, API, trace format, model, migration, audit, provenance and third-party notices
+- README, API, trace format, model, migration and third-party notices
   describe the actual implementation. No hidden engine fallback or live server required.
 - Built classic/ESM distributions are checked in, not only the Python copy; schemas,
   coastline and notices are present in the wheel. Exported HTML and both browser forms

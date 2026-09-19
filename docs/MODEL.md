@@ -1,7 +1,7 @@
 # Model and limits
 
 The actual source path is UserGS synthetic TLE → sgp4 export → PyEphem readtle and
-compute. See PROVENANCE and ADR-001. This is not the earlier UI's circular-orbit engine.
+compute. See [the coordinate and time model](ADR-001-coordinates-time.md) for details.
 Default epoch is 2000-01-01 UTC, synthetic data, not a live satellite catalogue.
 
 Retained assumptions: WGS72 TLE initialization, zero drag, eccentricity 1e-7,
