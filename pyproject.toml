@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "satnet-edu"
+version = "0.1.0"
+description = "Educational satellite networks with a trace-driven offline viewer"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["ephem>=4.2,<5", "sgp4>=2.25,<3", "astropy>=6,<9", "jsonschema>=4.23,<5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "build>=1", "playwright>=1.50"]
+
+[project.scripts]
+satnet-edu = "satnet_edu.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+satnet_edu = ["assets/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
