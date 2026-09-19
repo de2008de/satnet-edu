@@ -1,0 +1,792 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:satnet-edu:trace:1.0.0",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "satnet-edu.trace"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "producer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "satnet-edu"
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "source_zip_sha256": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "source_zip_sha256",
+        "dependencies"
+      ],
+      "additionalProperties": false
+    },
+    "experiment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "epoch_utc": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scenario": {
+          "$ref": "#/$defs/scenario"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "epoch_utc",
+        "seed",
+        "scenario"
+      ],
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "properties": {
+        "propagator": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "earth_model": {
+          "const": "sphere"
+        },
+        "earth_radius_km": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "latitude_kind": {
+          "const": "geocentric"
+        },
+        "coordinate_frame": {
+          "const": "ECEF"
+        },
+        "units": {
+          "type": "object",
+          "properties": {
+            "length": {
+              "const": "km"
+            },
+            "angle": {
+              "const": "deg"
+            },
+            "time": {
+              "const": "s"
+            },
+            "delay": {
+              "const": "ms"
+            }
+          },
+          "required": [
+            "length",
+            "angle",
+            "time",
+            "delay"
+          ],
+          "additionalProperties": false
+        },
+        "c_km_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tle_gravity_model": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "orbit_radius_constant_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "orbit_mu_m3_s2": {
+          "type": "number",
+          "minimum": 0
+        },
+        "link_policy": {
+          "$ref": "#/$defs/policy"
+        },
+        "delay_model": {
+          "const": "one-way propagation only"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        }
+      },
+      "required": [
+        "propagator",
+        "earth_model",
+        "earth_radius_km",
+        "latitude_kind",
+        "coordinate_frame",
+        "units",
+        "c_km_s",
+        "tle_gravity_model",
+        "orbit_radius_constant_m",
+        "orbit_mu_m3_s2",
+        "link_policy",
+        "delay_model",
+        "limitations"
+      ],
+      "additionalProperties": false
+    },
+    "recording": {
+      "type": "object",
+      "properties": {
+        "start_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "step_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "route_queries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/query"
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "routes": {
+              "type": "boolean"
+            },
+            "energy": {
+              "const": false
+            },
+            "packet_events": {
+              "const": false
+            }
+          },
+          "required": [
+            "routes",
+            "energy",
+            "packet_events"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "start_s",
+        "end_s",
+        "step_s",
+        "sample_count",
+        "route_queries",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/object"
+      }
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/frame"
+      },
+      "minItems": 1
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "t_s": {
+            "type": "number",
+            "minimum": 0
+          },
+          "node_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "kind": {
+            "enum": [
+              "failure_start",
+              "failure_end"
+            ]
+          },
+          "timing": {
+            "const": "scheduled"
+          }
+        },
+        "required": [
+          "t_s",
+          "node_id",
+          "kind",
+          "timing"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "producer",
+    "experiment",
+    "model",
+    "recording",
+    "objects",
+    "frames",
+    "events"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "orbit": {
+      "type": "object",
+      "properties": {
+        "altitude_km": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 36000
+        },
+        "inclination_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "raan_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        },
+        "phase_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        }
+      },
+      "required": [
+        "altitude_km",
+        "inclination_deg",
+        "raan_deg",
+        "phase_deg"
+      ],
+      "additionalProperties": false
+    },
+    "object": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "kind": {
+          "enum": [
+            "satellite",
+            "ground_station"
+          ]
+        },
+        "tle": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "orbit": {
+          "$ref": "#/$defs/orbit"
+        },
+        "constellation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "plane": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lat_deg": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon_deg": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "constellation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "planes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "sats_per_plane": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "altitude_km": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 36000
+        },
+        "inclination_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "phase_rule": {
+          "enum": [
+            "usergs_alternating_half_slot"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "planes",
+        "sats_per_plane",
+        "altitude_km",
+        "inclination_deg",
+        "phase_rule"
+      ],
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "topology": {
+          "enum": [
+            "orbital_neighbors",
+            "distance"
+          ]
+        },
+        "max_isl_km": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "min_elevation_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        }
+      },
+      "required": [
+        "topology",
+        "max_isl_km",
+        "min_elevation_deg"
+      ],
+      "additionalProperties": false
+    },
+    "failure": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "start_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_s": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "node_id",
+        "start_s",
+        "end_s"
+      ],
+      "additionalProperties": false
+    },
+    "scenario": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "satnet-edu.scenario"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "epoch_utc": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "max_nodes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "max_samples": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000
+            }
+          },
+          "required": [
+            "max_nodes",
+            "max_samples"
+          ],
+          "additionalProperties": false
+        },
+        "constellations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/constellation"
+          }
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/object"
+          }
+        },
+        "link_policy": {
+          "$ref": "#/$defs/policy"
+        },
+        "failures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/failure"
+          }
+        }
+      },
+      "required": [
+        "format",
+        "schema_version",
+        "name",
+        "epoch_utc",
+        "seed",
+        "limits",
+        "constellations",
+        "objects",
+        "link_policy",
+        "failures"
+      ],
+      "additionalProperties": false
+    },
+    "query": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "metric": {
+          "enum": [
+            "hops",
+            "delay"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target",
+        "metric"
+      ],
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "position_ecef_km": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "lat_deg": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon_deg": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "altitude_km": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "enabled",
+        "position_ecef_km",
+        "lat_deg",
+        "lon_deg",
+        "altitude_km"
+      ],
+      "additionalProperties": false
+    },
+    "link": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "isl",
+            "gsl"
+          ]
+        },
+        "distance_km": {
+          "type": "number",
+          "minimum": 0
+        },
+        "propagation_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target",
+        "kind",
+        "distance_km",
+        "propagation_ms"
+      ],
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "properties": {
+        "query_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "status": {
+          "enum": [
+            "reachable",
+            "unreachable"
+          ]
+        },
+        "node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "link_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "hops": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "distance_km": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "propagation_ms": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "no_path",
+                "endpoint_disabled"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "query_id",
+        "status",
+        "node_ids",
+        "link_ids",
+        "hops",
+        "distance_km",
+        "propagation_ms",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "frame": {
+      "type": "object",
+      "properties": {
+        "t_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "node_states": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/state"
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          }
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/route"
+          }
+        }
+      },
+      "required": [
+        "t_s",
+        "node_states",
+        "links",
+        "routes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

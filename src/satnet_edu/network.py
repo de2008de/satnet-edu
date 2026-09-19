@@ -60,6 +60,31 @@ class Network:
         self._constellations.append(descriptor)
         return deepcopy(descriptor)
 
+    def add_satellite(self, node_id, *, altitude_km, inclination_deg, raan_deg, phase_deg):
+        return self._satellite(node_id, altitude_km, inclination_deg, raan_deg, phase_deg)
+
+    def add_ground_station(self, node_id, *, lat, lon, label=None):
+        self._check_id(node_id)
+        number(lat, "lat", -90, 90)
+        number(lon, "lon", -180, 180)
+        self._objects.append(dict(id=node_id, kind="ground_station", label=text(node_id if label is None else label), lat_deg=lat, lon_deg=lon))
+        return node_id
+
+    def set_link_policy(self, *, topology="orbital_neighbors", max_isl_km=4000, min_elevation_deg=10):
+        if topology not in ("orbital_neighbors", "distance"):
+            raise ValueError("topology: expected orbital_neighbors or distance")
+        number(max_isl_km, "max_isl_km", positive=True)
+        number(min_elevation_deg, "min_elevation_deg", 0, 90)
+        self._policy = dict(topology=topology, max_isl_km=max_isl_km, min_elevation_deg=min_elevation_deg)
+
+    def add_failure(self, *, node_id, start_s, end_s):
+        if node_id not in {o["id"] for o in self._objects}:
+            raise ValueError(f"failure.node_id: unknown node {node_id}")
+        number(start_s, "failure.start_s")
+        number(end_s, "failure.end_s", start_s, positive=True)
+        self._failures.append(dict(node_id=node_id, start_s=start_s, end_s=end_s))
+        self._failures.sort(key=lambda f: (f["start_s"], f["end_s"], f["node_id"]))
+
     def at(self, t_s, disabled=()):
         from .engine.usergs_adapter import snapshot
         number(t_s, "t_s")
@@ -75,3 +100,25 @@ class Network:
                              limits=dict(max_nodes=self.max_nodes, max_samples=self.max_samples),
                              constellations=self._constellations, objects=self._objects,
                              link_policy=self._policy, failures=self._failures))
+
+    @classmethod
+    def from_dict(cls, data):
+        from .trace.validate import validate_scenario
+        validate_scenario(data)
+        net = cls(data["name"], epoch=data["epoch_utc"], seed=data["seed"], **data["limits"])
+        # Reconstruct from the explicit object definitions, preserving creation order
+        # and actual recorded TLEs; reject any mismatch between TLE and orbit inputs.
+        net.set_link_policy(**data["link_policy"])
+        for obj in data["objects"]:
+            if obj["kind"] == "ground_station":
+                net.add_ground_station(obj["id"], lat=obj["lat_deg"], lon=obj["lon_deg"], label=obj["label"])
+            else:
+                extra = {k: obj[k] for k in ("constellation_id", "plane", "slot") if k in obj}
+                net._satellite(obj["id"], **obj["orbit"], **extra)
+                if net._objects[-1]["tle"] != obj["tle"]:
+                    raise ValueError(f"objects.{obj['id']}.tle: differs from orbit/epoch; use the recorded dependency versions")
+                net._objects[-1]["label"] = text(obj["label"])
+        net._constellations = deepcopy(data["constellations"])
+        for failure in data["failures"]:
+            net.add_failure(**failure)
+        return net

@@ -15,3 +15,13 @@ Extracted UserGS TLE/PyEphem path and immutable positions; generated
 `.venv/Scripts/python -m pytest -q`: 2 passed (TLE exact, position/distance regression,
 sampling). `.venv/Scripts/python tools/smoke_m1.py`: browser file import/seek check.
 Route capability explicitly false in this first trace. Full contract and player follow.
+
+## M2
+M1 commit: da5021a; file:// import and seek passed in Edge headless.
+Implemented generic GS, manual satellites with distance policy, immutable snapshots,
+neighbor candidates + Earth/range/elevation filtering, endpoint-only GS paths,
+delay/hops deterministic routing, scenario roundtrip and half-open scheduled failures.
+Trace schemas and semantic validators enforce the sampling grid and recorded paths.
+`.venv/Scripts/python -m pytest -q -p no:cacheprovider`: 25 passed.
+`python -m satnet_edu validate examples/data/minimal.json`: 5 samples valid.
+Example HTML export is completed in M3; its final run is recorded under M4.

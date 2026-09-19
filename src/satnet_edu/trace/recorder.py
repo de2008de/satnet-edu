@@ -8,11 +8,23 @@ from astropy.constants import G, M_earth, R_earth
 from ..engine.clock import sample_times
 from ..engine.geometry import EARTH_RADIUS_KM, C_KM_S
 from .io import Run
+from ..state import RouteQuery
 
 
 def record(net, start_s, duration_s, step_s, queries):
-    if queries:
-        raise ValueError("route recording is not yet available in M1")
+    normalized = []
+    for i, q in enumerate(queries):
+        if isinstance(q, RouteQuery):
+            normalized.append(q)
+        elif isinstance(q, (tuple, list)) and len(q) == 2:
+            normalized.append(RouteQuery(f"query-{i+1}", q[0], q[1]))
+        else:
+            raise ValueError(f"record_routes[{i}]: expected RouteQuery or (source, target)")
+    if len({q.id for q in normalized}) != len(normalized):
+        raise ValueError("record_routes: duplicate query ID")
+    ids = {o["id"] for o in net._objects}
+    if any(q.source not in ids or q.target not in ids for q in normalized):
+        raise ValueError("record_routes: unknown endpoint")
     times = sample_times(start_s, duration_s, step_s, net._failures, net.max_samples)
     scenario = net.to_dict()
     payload = dict(format="satnet-edu.trace", schema_version="1.0.0",
@@ -26,9 +38,20 @@ def record(net, start_s, duration_s, step_s, queries):
                    orbit_mu_m3_s2=(G.value*M_earth.value), link_policy=scenario["link_policy"],
                    delay_model="one-way propagation only", limitations=["No queues, traffic, processing, protocol convergence or energy model", "Spherical educational link geometry"]),
         recording=dict(start_s=start_s, end_s=start_s+duration_s, step_s=step_s, sample_count=len(times),
-                       route_queries=[], capabilities=dict(routes=False, energy=False, packet_events=False)),
+                       route_queries=[asdict(q) for q in normalized], capabilities=dict(routes=bool(normalized), energy=False, packet_events=False)),
         objects=sorted(scenario["objects"], key=lambda o: o["id"]), frames=[], events=[])
     for t in times:
         snap = net.at(t)
-        payload["frames"].append(dict(t_s=t, node_states=[asdict(n) for n in snap.nodes.values()], links=[], routes=[]))
+        routes = []
+        for q in normalized:
+            r = snap.route(q.source, q.target, q.metric)
+            routes.append(dict(query_id=q.id, status="reachable" if r.reachable else "unreachable", node_ids=r.path,
+                               link_ids=r.link_ids, hops=r.hops, distance_km=r.distance_km, propagation_ms=r.propagation_ms, reason=r.reason))
+        payload["frames"].append(dict(t_s=t, node_states=[asdict(n) for n in snap.nodes.values()],
+                                     links=[asdict(l) for l in snap.links.values()], routes=routes))
+    for f in net._failures:
+        for field, action in [("start_s", "failure_start"), ("end_s", "failure_end")]:
+            if times[0] <= f[field] <= times[-1]:
+                payload["events"].append(dict(t_s=f[field], node_id=f["node_id"], kind=action, timing="scheduled"))
+    payload["events"].sort(key=lambda e: (e["t_s"], e["node_id"], e["kind"]))
     return Run(payload)
