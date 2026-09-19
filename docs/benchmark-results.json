@@ -1,0 +1,49 @@
+{
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "browser": "Edge/Chromium headless"
+  },
+  "results": [
+    {
+      "scale": "small",
+      "satellites": 24,
+      "ground_stations": 2,
+      "samples": 61,
+      "simulation_s": 0.06199940002989024,
+      "validate_save_s": 0.20388400001684204,
+      "json_bytes": 605995,
+      "parse_ms": 0.699999988079071,
+      "validate_clone_first_render_ms": 13.199999988079071,
+      "mean_seek_render_ms": 0.5600000023841858,
+      "js_heap_observed_bytes": 10600000
+    },
+    {
+      "scale": "standard",
+      "satellites": 72,
+      "ground_stations": 2,
+      "samples": 361,
+      "simulation_s": 0.9192261999705806,
+      "validate_save_s": 3.1918857999844477,
+      "json_bytes": 10445380,
+      "parse_ms": 14.600000023841858,
+      "validate_clone_first_render_ms": 141.69999998807907,
+      "mean_seek_render_ms": 1.280000001192093,
+      "js_heap_observed_bytes": 10600000
+    },
+    {
+      "scale": "larger",
+      "satellites": 144,
+      "ground_stations": 2,
+      "samples": 721,
+      "simulation_s": 5.550815300026443,
+      "validate_save_s": 16.236101100046653,
+      "json_bytes": 46144712,
+      "parse_ms": 69.5,
+      "validate_clone_first_render_ms": 581.3000000119209,
+      "mean_seek_render_ms": 2.4799999952316285,
+      "js_heap_observed_bytes": 10600000
+    }
+  ],
+  "peak_memory": "Not measured. Browser heap is a coarse point observation, not peak memory; Python/native peak not measured."
+}

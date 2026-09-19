@@ -1,8 +1,2 @@
-<!doctype html><meta charset="utf-8"><title>SatNet Edu — M1</title>
-<h1>SatNet Edu</h1><input type="file" accept=".json" aria-label="Import trace"><input type="range" min="0" max="0" value="0" aria-label="Sample"><output></output>
-<svg viewBox="0 0 1000 500" style="width:100%;border:1px solid #ccc" aria-label="Recorded satellite map"></svg><p role="alert"></p>
-<script>
-let trace;const file=document.querySelector('[type=file]'),slider=document.querySelector('[type=range]'),svg=document.querySelector('svg');
-function render(){const f=trace.frames[+slider.value];document.querySelector('output').textContent=f.t_s+' s';svg.replaceChildren();for(const n of f.node_states){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',(n.lon_deg+180)/360*1000);c.setAttribute('cy',(90-n.lat_deg)/180*500);c.setAttribute('r',4);svg.append(c);}}
-file.onchange=async()=>{try{trace=JSON.parse(await file.files[0].text());if(trace.format!=='satnet-edu.trace')throw Error('Invalid trace');slider.max=trace.frames.length-1;slider.value=0;render();}catch(e){document.querySelector('[role=alert]').textContent=e.message;}};slider.oninput=render;
-</script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SatNet Edu · minimal recording</title><style>body{margin:0;background:#fff}</style></head><body><main id="viewer"></main>
+<script src="../player/dist/satnet-edu-player.js"></script><script>const player=SatNetEduPlayer.createPlayer(document.getElementById('viewer'));</script></body></html>

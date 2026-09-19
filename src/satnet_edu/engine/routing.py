@@ -1,5 +1,7 @@
 """Deterministic snapshot shortest paths. Ground stations are endpoints only."""
+
 import heapq
+
 from ..state import Route
 
 
@@ -9,8 +11,10 @@ def route(snapshot, source, target, metric):
     for node in (source, target):
         if node not in snapshot.nodes:
             raise ValueError(f"route: unknown node {node}")
+
     def missing(reason):
         return Route(False, (), (), None, None, None, metric, reason)
+
     if not snapshot.nodes[source].enabled or not snapshot.nodes[target].enabled:
         return missing("endpoint_disabled")
     adjacency = {n: [] for n in snapshot.nodes}
@@ -35,7 +39,11 @@ def route(snapshot, source, target, metric):
         for nxt, link in sorted(adjacency[node], key=lambda item: item[0]):
             if nxt in path or not snapshot.nodes[nxt].enabled:
                 continue
-            dist, delay, hops = km + link.distance_km, ms + link.propagation_ms, len(lids) + 1
+            dist, delay, hops = (
+                km + link.distance_km,
+                ms + link.propagation_ms,
+                len(lids) + 1,
+            )
             a, b = (delay, hops) if metric == "delay" else (hops, delay)
             heapq.heappush(queue, (a, b, path + (nxt,), lids + (link.id,), dist, delay))
     return missing("no_path")

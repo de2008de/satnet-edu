@@ -89,6 +89,10 @@ function validateTrace(data) {
     const p=`frames[${i}]`, states=indexBy(f.node_states,'id',p), links=indexBy(f.links,'id',p), routes=indexBy(f.routes,'query_id',p), pairs=new Set();
     requireData(states.size===objects.size&&[...states.keys()].every(k=>objects.has(k)),p,'missing/unknown node state');
     requireData(routes.size===queries.size&&[...routes.keys()].every(k=>queries.has(k)),p,'missing/unknown query result');
+    for (const [id,state] of states) {
+      const scheduled=s.failures.some(fault=>fault.node_id===id&&fault.start_s<=f.t_s&&f.t_s<fault.end_s);
+      requireData(state.enabled!==scheduled,p,'scheduled failure state mismatch');
+    }
     for (const l of links.values()) {
       requireData(states.has(l.source)&&states.has(l.target)&&l.source!==l.target,p,'unknown endpoint/self loop');
       const pair=JSON.stringify([l.source,l.target].sort());requireData(!pairs.has(pair),p,'duplicate pair');pairs.add(pair);

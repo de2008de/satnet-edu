@@ -39,3 +39,30 @@ recorded queries, fault recovery, Chinese, 390px viewport, malicious labels, two
 instances, CSS isolation and destroy. Desktop/mobile screenshots inspected.
 `python -m pytest -q -p no:cacheprovider`: 26 passed.
 `python -m build --wheel --no-isolation`: local wheel built; clean install follows.
+
+## M4 — complete
+
+M3 commit: d7f0512. M4 implementation and report are in the final `M4:` local commit
+(use `git log --oneline`; avoiding a self-referential hash in this file).
+
+- Clean Python 3.11 wheel installation tested in .venv-clean; all five examples run
+  from a different working directory with imports resolving to site-packages.
+- 50 Python tests passed; 2 valid/8 invalid ESM fixtures checked; full Edge browser
+  integration passed, including ESM and comparison to Python's recorded metrics.
+- Small, standard and larger benchmark scenarios completed; measurements and memory
+  limitations recorded in docs/TEST_REPORT.md and docs/benchmark-results.json.
+- README, API, trace format, model, migration, audit, provenance and third-party notices
+  describe the actual implementation. No hidden engine fallback or live server required.
+- Built classic/ESM distributions are checked in, not only the Python copy; schemas,
+  coastline and notices are present in the wheel. Exported HTML and both browser forms
+  use the same validated player source. M1's unvalidated prototype is in Git history;
+  its current demo now uses the final player.
+- Original archive hashes unchanged. No blanket license or public publishing.
+- Known upstream propagation edge case, browser/platform coverage limits and unmeasured
+  peak memory disclosed. Custom routing callbacks, energy, editor, challenges, hosted
+  execution and community remain deferred. Stop at v0.1; M5 has not been started.
+
+Primary outputs: outputs/experiment.json and outputs/experiment.html,
+outputs/scheduled-failure.html, examples/data/scheduled-failure.json, and
+dist/satnet_edu-0.1.0-py3-none-any.whl. Output files can be regenerated from examples;
+small real traces and browser distributions are checked into the repository.

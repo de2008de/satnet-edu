@@ -1,4 +1,5 @@
 """Immutable public data objects. No mutable ephem object escapes the adapter."""
+
 from dataclasses import dataclass
 from types import MappingProxyType
 
@@ -60,8 +61,11 @@ class Snapshot:
 
     def __post_init__(self):
         for field in ("nodes", "links", "kinds"):
-            object.__setattr__(self, field, MappingProxyType(dict(getattr(self, field))))
+            object.__setattr__(
+                self, field, MappingProxyType(dict(getattr(self, field)))
+            )
 
     def route(self, source, target, metric="delay"):
         from .engine.routing import route
+
         return route(self, source, target, metric)

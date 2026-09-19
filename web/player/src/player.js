@@ -116,7 +116,7 @@ function createPlayer(container, options={}) {
       refs.slider.min=data.recording.start_s;refs.slider.max=data.recording.end_s;draw();
     }catch(e){fail(e);throw e;}
   }
-  async function loadFile(file){if(!file)return;const token=++loadToken;try{requireData(file.size<=maxBytes,'file',`exceeds ${maxBytes} bytes`);const content=await file.text();if(!dead&&token===loadToken)await load(content);}catch(e){fail(e);}}
+  async function loadFile(file){if(!file)return;pause();const token=++loadToken;try{requireData(file.size<=maxBytes,'file',`exceeds ${maxBytes} bytes`);const content=await file.text();if(!dead&&token===loadToken)await load(content);}catch(e){fail(e);}}
   function seek(seconds){guard();requireData(Number.isFinite(seconds),'seek','expected finite seconds');if(!trace)return;head=Math.max(trace.recording.start_s,Math.min(trace.recording.end_s,seconds));let lo=0,hi=trace.frames.length;while(lo<hi){const mid=(lo+hi)>>1;if(trace.frames[mid].t_s<=head)lo=mid+1;else hi=mid;}index=Math.max(0,lo-1);draw();}
   function step(delta){if(!trace)return;pause();seek(trace.frames[Math.max(0,Math.min(trace.frames.length-1,index+delta))].t_s);}
   function tick(now){if(!playing||dead)return;const elapsed=(now-last)/1000;last=now;seek(head+elapsed*speed);if(head>=trace.recording.end_s){pause();return;}raf=requestAnimationFrame(tick);}
