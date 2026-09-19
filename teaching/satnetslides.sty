@@ -1,0 +1,75 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{satnetslides}[2026/09/19 Monochrome SatNet Edu Beamer style]
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{lmodern}
+\RequirePackage{tikz}
+\RequirePackage{pgfplots}
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\usetikzlibrary{arrows.meta,calc,positioning,backgrounds}
+\pgfplotsset{compat=1.18}
+
+\definecolor{Paper}{gray}{1}
+\definecolor{Ink}{gray}{0.08}
+\definecolor{Muted}{gray}{0.38}
+\definecolor{Line}{gray}{0.76}
+\definecolor{Soft}{gray}{0.94}
+\definecolor{Mid}{gray}{0.74}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercovered{invisible}
+\setbeamersize{text margin left=0.7cm,text margin right=0.7cm}
+\setbeamertemplate{itemize item}{\color{Ink}$\blacktriangleright$}
+\setbeamertemplate{itemize subitem}{\color{Muted}$\bullet$}
+\setbeamercolor{normal text}{fg=Ink,bg=Paper}
+\setbeamercolor{title}{fg=Ink}
+\setbeamercolor{frametitle}{fg=Ink}
+\setbeamercolor{structure}{fg=Ink}
+\setbeamercolor{footline}{fg=Muted,bg=Paper}
+\setbeamerfont{title}{series=\bfseries,size=\LARGE}
+\setbeamerfont{frametitle}{series=\bfseries,size=\Large}
+\setbeamerfont{footline}{size=\tiny}
+\setbeamertemplate{background}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Line] (current page.south west) rectangle ([yshift=0.10cm]current page.south east);
+  \end{tikzpicture}%
+}
+\setbeamertemplate{frametitle}{%
+  \vspace{0.20cm}
+  \begin{beamercolorbox}[wd=\paperwidth,ht=0.95cm,dp=0.18cm,leftskip=0.7cm,rightskip=1.2cm]{frametitle}
+    \insertframetitle
+  \end{beamercolorbox}
+  \vspace{-0.05cm}
+  \hspace{0.72cm}{\color{Ink}\rule{0.82\paperwidth}{1.2pt}}
+}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.86\paperwidth,ht=2.8ex,dp=1.2ex,leftskip=0.7cm]{footline}
+      SATNET EDU\quad Lecture 01\quad Satellite Network Architecture
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.14\paperwidth,ht=2.8ex,dp=1.2ex,rightskip=0.7cm]{footline}
+      \hfill\insertframenumber/\inserttotalframenumber
+    \end{beamercolorbox}%
+  }%
+}
+\newcommand{\context}[1]{\par{\small\color{Muted}#1}\par\vspace{0.10cm}}
+\newcommand{\point}[2]{%
+  \item \textbf{#1}
+  \begin{itemize}\fontsize{8.5}{10}\selectfont
+    \setlength{\itemsep}{0.12em}
+    #2
+  \end{itemize}}
+\newenvironment{teachingpoints}{\begin{itemize}\small\setlength{\itemsep}{0.35em}}{\end{itemize}}
+\newcommand{\assumption}[1]{\vfill{\fontsize{6.5}{7.5}\selectfont\color{Muted}#1\par}}
+\newcommand{\figtitle}[1]{{\small\bfseries #1}\par\vspace{0.12cm}}
+\newcommand{\keyidea}[1]{\par\vspace{0.15cm}\colorbox{Soft}{\parbox{0.94\linewidth}{\footnotesize\textbf{Key idea:} #1}}}
+\tikzset{
+  net/.style={draw=Ink,line width=0.65pt},
+  flow/.style={net,-{Stealth[length=1.7mm,width=1.25mm]}},
+  faint/.style={draw=Line,line width=0.5pt},
+  every node/.style={text=Ink},
+  lab/.style={font=\scriptsize,align=center,inner sep=2pt},
+  smalllab/.style={font=\tiny,align=center,inner sep=1.5pt},
+  graphnode/.style={circle,draw=Ink,fill=Paper,minimum size=0.53cm,inner sep=0pt,font=\footnotesize\bfseries},
+  weight/.style={fill=Paper,inner sep=2pt,font=\scriptsize}
+}

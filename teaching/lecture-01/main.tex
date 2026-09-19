@@ -1,0 +1,457 @@
+% Compile from this directory with latexmk -pdf -jobname=lecture-01 main.tex.
+% All figures are editable TikZ/PGFPlots, with no slide screenshots.
+\newif\ifstudenthandout
+\studenthandouttrue
+\ifstudenthandout
+  \documentclass[aspectratio=169,11pt,handout,t]{beamer}
+\else
+  \documentclass[aspectratio=169,11pt,t]{beamer}
+\fi
+\makeatletter
+\def\input@path{{../}}
+\makeatother
+\usepackage{satnetslides}
+\input{icons.tex}
+\title[Satellite Network Architecture]{Satellite Network Architecture}
+\author{Yi Ching (David) Chou}
+\date{}
+
+\begin{document}
+
+% 1. Cover, adapted to the geometry and typography of the reference deck.
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Paper] (current page.south west) rectangle (current page.north east);
+    \fill[Line] (current page.south west) rectangle ([yshift=0.18cm]current page.south east);
+    \fill[Ink] ([xshift=0.95cm,yshift=-0.95cm]current page.north west) rectangle ++(0.12cm,-5.35cm);
+    \node[anchor=north west,text=Muted] at ([xshift=1.35cm,yshift=-0.9cm]current page.north west)
+      {\small\bfseries SATNET EDU / Lecture 01};
+    \node[anchor=north west,align=left,text width=12.1cm]
+      at ([xshift=1.35cm,yshift=-1.65cm]current page.north west)
+      {{\fontsize{29}{33}\selectfont\bfseries Satellite Network\\[0.12cm]Architecture}};
+    \node[anchor=north west,align=left,text width=11.6cm,text=Muted]
+      at ([xshift=1.38cm,yshift=-3.85cm]current page.north west)
+      {\small How orbit, coverage, and routing shape a packet's journey.};
+    \node[anchor=north west,fill=Ink,rounded corners=2pt,inner xsep=0.18cm,inner ysep=0.09cm,text=Paper]
+      (tag) at ([xshift=1.38cm,yshift=-4.78cm]current page.north west)
+      {\small\bfseries LECTURE 01};
+    \node[anchor=west,align=left,text width=9.5cm] at ([xshift=0.28cm]tag.east)
+      {\small An introduction to low Earth orbit (LEO) networks};
+    \draw[Ink,line width=1.1pt] ([xshift=1.38cm,yshift=-5.55cm]current page.north west) -- ++(10.9cm,0);
+    \node[anchor=north,align=center,text=Muted] at ([yshift=-5.85cm]current page.north)
+      {\small Trace the path. Explain the constraints. Predict what changes.};
+    \node[anchor=north,align=center,text=Ink] at ([yshift=-6.65cm]current page.north)
+      {\small Instructor: Yi Ching (David) Chou};
+  \end{tikzpicture}
+\end{frame}
+
+% 2. The physical architecture.
+\begin{frame}{From the User Terminal to the Internet}
+  \context{Follow one outbound packet from a user device, through space, to an Internet server.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{The terminal provides radio access.}{
+          \item A router feeds the terminal. The \textbf{user link} then carries traffic from terminal to satellite.}
+        \point{The gateway reconnects to Earth.}{
+          \item Its \textbf{feeder link} carries traffic from space. Ground networks deliver the packet to the server.}
+        \point{Every part of the path must work.}{
+          \item A visible satellite alone is insufficient. Radio links, the gateway, and the onward route must all be usable.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{One packet's complete access path}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (-0.2,-0.4) rectangle (6.8,4.55);
+        \fill[Soft,rounded corners=2pt] (0.02,2.98) rectangle (6.55,4.50);
+        \node[smalllab,anchor=north west,text=Muted] at (0.16,4.41) {SPACE};
+        \pic[scale=1.12] at (3.2,3.9) {satellite};
+        \node[lab] at (3.2,4.39) {Satellite};
+        \pic at (0.8,2.50) {terminal};
+        \node[lab] at (0.8,2.07) {User terminal};
+        \pic at (5.5,2.50) {gateway};
+        \node[lab] at (5.5,2.07) {Gateway};
+        \pic at (0.8,0.85) {user-router};
+        \node[lab] at (0.8,0.38) {User + router};
+        \pic at (5.5,0.85) {internet};
+        \node[lab] at (5.5,0.37) {Internet};
+        \pic at (3.1,0.85) {server};
+        \node[lab] at (3.1,0.37) {Server};
+        \draw[flow] (0.8,1.26) -- (0.8,1.83) node[midway,right=2pt,lab] {Local link};
+        \draw[flow] (1.0,2.88) -- (2.65,3.65);
+        \node[lab,anchor=east] at (1.78,3.40) {User link};
+        \draw[flow] (3.75,3.65) -- (5.3,2.88);
+        \node[lab,anchor=west] at (4.62,3.42) {Feeder link};
+        \draw[flow] (5.5,1.87) -- (5.5,1.28);
+        \node[lab,anchor=east,text=Muted] at (5.2,1.57) {Ground\\networks};
+        \draw[flow] (5.0,0.85) -- (3.62,0.85);
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Generic single-satellite access route. Replies require a return route, which may be different.}
+  \note{The service link is also called the user link. These labels identify physical roles, not one choice of frequency or protocol. Ask what happens if a gateway loses its ground connection while the terminal can still see the satellite. Background: 3GPP TS 38.300, Release 17, non-terrestrial network architecture.}
+\end{frame}
+
+% 3. Altitude and orbital motion.
+\begin{frame}{Low Orbits Trade Shorter Paths for Motion}
+  \context{Orbit altitude changes both signal travel time and how a satellite moves relative to a user.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Short paths reduce travel time.}{
+          \item For one vertical leg, distance equals altitude. At 550 km, the signal takes about 1.8 ms to reach the satellite.}
+        \point{LEO satellites move across the sky.}{
+          \item A 550 km circular orbit takes 95.5 minutes at about 7.6 km/s. A fixed terminal must change satellites over time.}
+        \point{A GEO satellite stays in one place.}{
+          \item A geostationary satellite stays above one equatorial point, but has a much longer radio path.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Compare one ideal vertical radio leg}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (-0.1,-0.15) rectangle (6.6,2.35);
+        \draw[net] (0.3,0.35) -- (6.3,0.35);
+        \node[lab,below] at (3.3,0.35) {Earth's surface};
+        \pic at (1.3,1.10) {satellite};
+        \pic at (5.3,1.85) {satellite};
+        \draw[net] (1.3,0.85) -- (1.3,0.38);
+        \draw[net] (5.3,1.58) -- (5.3,0.38);
+        \node[lab,above] at (1.3,1.45) {LEO: 550 km};
+        \node[lab,above] at (5.25,2.16) {GEO: 35,786 km};
+        \node[lab,align=center] at (3.25,1.0) {$t_{\mathrm{prop}}=d/c$\\[-1pt]{\tiny distance / signal speed}};
+      \end{tikzpicture}
+      \par\vspace{0.13cm}
+      {\scriptsize\renewcommand{\arraystretch}{1.12}
+      \begin{tabular}{@{}lcc@{}}\toprule
+        & \textbf{550 km LEO} & \textbf{GEO} \\ \midrule
+        One vertical leg & 1.8 ms & 119.3 ms \\
+        Orbit period & 95.5 min & 23 h 56 min \\
+        Position in sky & Changes & Fixed \\ \bottomrule
+      \end{tabular}}
+    \end{column}
+  \end{columns}
+  \assumption{Circular orbits. Earth radius 6371 km, signal speed $c\approx300{,}000$ km/s. The sketch is not to scale.}
+  \note{Let r = R + h. Circular orbit speed is sqrt(mu/r), and period is 2 pi sqrt(r cubed / mu). With mu = 398600.44 km cubed per second squared, the 550 km orbit has speed 7.589 km/s and period 95.502 minutes. GEO is circular, equatorial, and has a sidereal-day period. Background: ESA, Types of orbits.}
+\end{frame}
+
+% 4. Contact geometry.
+\begin{frame}{Elevation Determines Usable Contacts}
+  \context{Elevation is the angle above the local horizon. Altitude alone does not give link distance.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Lower elevation gives a longer path.}{
+          \item The \textbf{slant range} is the straight-line distance to the satellite. It increases as elevation falls.}
+        \point{A mask removes low-angle contacts.}{
+          \item Low angles face more blockage and atmosphere. A minimum elevation, such as $25^\circ$, is a design choice.}
+        \point{A higher mask reduces coverage.}{
+          \item It shrinks the usable ground region and shortens the time a user can stay connected to one satellite.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{The same altitude, different slant ranges}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (-0.1,-0.12) rectangle (6.7,2.65);
+        \path[draw=Line,fill=Soft] (0.1,0.35) .. controls (2.1,0.80) and (4.4,0.25) .. (6.4,0.03) -- (6.4,-0.10) -- (0.1,-0.10) -- cycle;
+        \coordinate (u) at (1.7,0.48);
+        \draw[dashed,Muted] (u) -- (6.3,0.48);
+        \draw[net] (u) -- (1.7,2.17);
+        \draw[net] (u) -- (5.7,1.185);
+        \pic[scale=0.88] at (1.7,2.38) {satellite};
+        \pic[scale=0.88] at (5.85,1.27) {satellite};
+        \fill[Ink] (u) circle (0.045);
+        \node[lab,below=4pt] at (u) {Terminal};
+        \node[lab,right] at (1.73,1.48) {550 km};
+        \node[lab] at (5.35,1.91) {Low in the sky};
+        \node[lab,anchor=east] at (1.04,2.35) {Overhead};
+        \draw[net] (2.50,0.48) arc[start angle=0,end angle=10,radius=0.8];
+        \node[lab] at (2.85,0.77) {$10^\circ$};
+        \node[smalllab,below] at (5.4,0.46) {Local horizon};
+      \end{tikzpicture}
+      \par\vspace{0.12cm}
+      {\scriptsize\renewcommand{\arraystretch}{1.12}
+      \begin{tabular}{@{}ccc@{}}\toprule
+        \textbf{Elevation} & \textbf{Slant range} & \textbf{One-way time} \\ \midrule
+        $90^\circ$ & 550 km & 1.8 ms \\
+        $30^\circ$ & 993 km & 3.3 ms \\
+        $10^\circ$ & 1815 km & 6.1 ms \\ \bottomrule
+      \end{tabular}}
+    \end{column}
+  \end{columns}
+  \assumption{Spherical Earth, radius 6371 km, altitude 550 km. Table values use spherical geometry, not the sketch's scale.}
+  \note{For elevation e, altitude h, and Earth radius R, d = sqrt((R+h) squared - R squared cos squared(e)) - R sin(e). Divide d by 300000 km/s for propagation delay. A full radio link budget also includes antenna gains, atmospheric loss, and interference.}
+\end{frame}
+
+% 5. Orbital planes and phasing.
+\begin{frame}{Constellations Spread Coverage Across Earth}
+  \context{A constellation coordinates many satellites across several orbital planes.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Planes spread satellites globally.}{
+          \item Satellites follow one another within a plane. A \textbf{shell} groups orbits with similar altitude and tilt.}
+        \point{Inclination sets latitude reach.}{
+          \item The orbit's tilt relative to the equator limits the latitudes reached by the point directly below the satellite.}
+        \point{Phasing helps fill coverage gaps.}{
+          \item Offsets stagger positions between planes. New satellites must arrive as others leave, with usable links and capacity.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Three planes, four satellites per plane}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (-3.25,-2.12) rectangle (3.25,2.45);
+        \begin{scope}[shift={(0,0.85)}]
+          \foreach \ang in {-58,0,58}{\draw[Line,dashed,rotate=\ang] (0,0) ellipse (1.47 and 0.58);}
+          \filldraw[fill=Soft,draw=Muted] (0,0) circle (0.93);
+          \draw[Line] (0,0) ellipse (0.93 and 0.22);
+          \node[lab] at (0,0) {Earth};
+          \foreach \ang in {-58,0,58}{
+            \begin{scope}[rotate=\ang]
+              \draw[net] (1.47,0) arc[start angle=0,end angle=180,x radius=1.47,y radius=0.58];
+              \foreach \t in {0,90,180}{\fill[Ink] ({1.47*cos(\t)},{0.58*sin(\t)}) circle (0.042);}
+            \end{scope}}
+          \node[smalllab,anchor=west,text=Muted] at (1.58,0.10) {Schematic\\orbit paths};
+        \end{scope}
+        \node[lab,font=\footnotesize\bfseries] at (0,-0.86) {Unwrapped positions within each plane};
+        \foreach \p in {0,1,2}{
+          \pgfmathsetmacro{\yy}{-1.27-0.32*\p}
+          \node[lab,anchor=east] at (-2.54,\yy) {P\the\numexpr\p+1\relax};
+          \draw[faint] (-2.4,\yy) -- (2.77,\yy);
+          \foreach \k in {0,1,2,3}{\fill[Ink] ({-2.16+1.37*\k+0.18*\p},\yy) circle (0.047);}
+        }
+      \end{tikzpicture}
+      {\footnotesize $3\text{ planes}\times4\text{ satellites}=12\text{ satellites}$}
+    \end{column}
+  \end{columns}
+  \assumption{Illustrative shell. Ground coverage extends away from each satellite's ground track. This is not a service-coverage map.}
+  \note{The subsatellite point lies directly beneath the satellite. For prograde inclination i between 0 and 90 degrees, it reaches latitudes between minus i and plus i. Footprints can extend beyond these latitudes. A plane has many satellites following a shared orbit path. The unwrapped rows show phasing, not geographic distance. Background: ESA, Types of orbits.}
+\end{frame}
+
+% 6. Coverage and shared capacity.
+\begin{frame}{Coverage Does Not Guarantee Capacity}
+  \context{Radio resources are divided among beams and among the active users inside each beam.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Spot beams focus radio energy.}{
+          \item Different beams serve different areas. Reusing spectrum needs isolation or interference control.}
+        \point{Beam capacity is shared by users.}{
+          \item The scheduler allocates time, frequency, and power. More active users can reduce each user's share.}
+        \point{Any link can become a bottleneck.}{
+          \item A strong user link cannot overcome a congested feeder link, a slow space path, or a limited ground connection.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Coverage and shared resources}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (-0.15,-2.05) rectangle (6.65,2.8);
+        \pic at (3.2,2.48) {satellite};
+        \foreach \x/\tone/\name in {1/Soft/A,3.2/Mid/B,5.4/Line/C}{
+          \draw[faint] (3.2,2.2) -- (\x-0.89,1.20);
+          \draw[faint] (3.2,2.2) -- (\x+0.89,1.20);
+          \filldraw[net,fill=\tone] (\x,1.13) ellipse (0.90 and 0.35);
+          \node[lab] at (\x,1.23) {Beam \name};
+          \foreach \dx in {-0.28,0,0.28}{\fill[Ink] (\x+\dx,0.97) circle (0.025);}
+        }
+        \node[smalllab,text=Muted] at (3.2,0.50) {Dots represent users in each beam};
+        \node[lab,font=\footnotesize\bfseries] at (3.2,0.06) {Equal sharing of one 100 Mb/s beam};
+        \node[lab,anchor=west] at (0.25,-0.43) {4 active users: $100/4=25$ Mb/s each};
+        \foreach \i/\name in {0/A,1/B,2/C,3/D}{
+          \filldraw[draw=Muted,fill=Soft,line width=0.4pt] ({0.3+1.45*\i},-0.94) rectangle ++(1.45,0.33);
+          \node[lab] at ({1.025+1.45*\i},-0.775) {\name};}
+        \node[lab,anchor=west] at (0.25,-1.35) {8 active users: $100/8=12.5$ Mb/s each};
+        \foreach \i/\name in {0/A,1/B,2/C,3/D,4/E,5/F,6/G,7/H}{
+          \filldraw[draw=Muted,fill=Soft,line width=0.4pt] ({0.3+0.725*\i},-1.87) rectangle ++(0.725,0.33);
+          \node[lab] at ({0.6625+0.725*\i},-1.705) {\name};}
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Teaching example: equal saturated users, enough onward capacity, and no protocol overhead. Real schedulers need not share equally.}
+  \note{Frequency reuse can raise total capacity but requires interference control. The allocation strips show fractions of a beam's resources, not a particular multiple-access protocol. Beam capacities and equal allocation are assumptions. Background: ESA Hylas payload description and multibeam frequency reuse.}
+\end{frame}
+
+% 7. Two routing architectures.
+\begin{frame}{Inter-Satellite Links Extend the Space Route}
+  \context{Traffic can return to Earth after one satellite or travel farther through space.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{A relay needs two ground contacts.}{
+          \item The user terminal and a connected gateway must both reach the same satellite.}
+        \point{ISLs create a route through space.}{
+          \item An \textbf{inter-satellite link} uses radio or optical terminals. A chain can reach a gateway beyond the first satellite's view.}
+        \point{Gateway choice changes the route.}{
+          \item Extra space hops may avoid a ground detour, but add distance and link requirements. Fewer hops need not mean less delay.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (-0.15,-0.45) rectangle (6.72,5.05);
+        \node[lab,font=\small\bfseries] at (3.25,4.82) {One satellite, then ground networks};
+        \pic at (2.30,4.12) {satellite};
+        \pic[scale=0.85] at (0.60,3.08) {terminal};
+        \pic[scale=0.85] at (4.02,3.08) {gateway};
+        \pic[scale=0.85] at (6.10,3.08) {server};
+        \draw[net] (0.72,3.40) -- (2.16,3.85) -- (3.89,3.42);
+        \draw[flow] (4.50,3.08) -- (5.69,3.08);
+        \node[smalllab,above] at (5.11,3.13) {Ground route};
+        \node[lab] at (0.60,2.67) {User terminal};
+        \node[lab] at (4.02,2.67) {Gateway};
+        \node[lab] at (6.10,2.67) {Server};
+        \draw[faint] (0.15,2.32) -- (6.55,2.32);
+        \node[lab,font=\small\bfseries] at (3.25,1.96) {A route with inter-satellite links};
+        \pic[scale=0.9] at (1.65,1.22) {satellite};
+        \pic[scale=0.9] at (3.95,1.22) {satellite};
+        \draw[net] (2.28,1.24) -- (3.33,1.24) node[midway,above=2pt,lab] {ISL};
+        \pic[scale=0.85] at (0.60,0.24) {terminal};
+        \pic[scale=0.85] at (4.60,0.24) {gateway};
+        \pic[scale=0.85] at (6.10,0.24) {server};
+        \draw[net] (0.77,0.53) -- (1.62,0.96);
+        \draw[net] (3.98,0.95) -- (4.50,0.56);
+        \draw[flow] (5.01,0.24) -- (5.69,0.24);
+        \node[lab] at (0.60,-0.20) {User terminal};
+        \node[lab] at (4.60,-0.20) {Gateway};
+        \node[lab] at (6.10,-0.20) {Server};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Generic architectures. ISLs need line of sight, suitable terminals, and accurate pointing. Neither route is always faster.}
+  \note{The upper diagram is often called a bent-pipe route. Here it describes a path, not a universal statement about onboard processing. The bottom route uses ISLs to change the available gateway. Background: 3GPP TS 38.300 and ESA laser communications descriptions.}
+\end{frame}
+
+% 8. Contact windows, generated from circular-orbit geometry.
+\begin{frame}{Handover Uses Overlapping Contact Windows}
+  \context{A fixed terminal can lose its serving satellite even when neither endpoint has failed.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Every pass has a finite window.}{
+          \item Elevation rises and falls. Below the minimum angle, or mask, a satellite is no longer usable in this model.}
+        \point{Overlap gives time to prepare.}{
+          \item The next link and onward route should be ready before the current contact ends. Here, overlap lasts from 3.8 to 5.2 min.}
+        \point{Visibility cannot ensure continuity.}{
+          \item Terminal capability, signaling, and resource allocation determine whether traffic continues or experiences a gap.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Two passes, one opportunity to switch}
+      \begin{tikzpicture}
+        \begin{axis}[
+          width=6.7cm,height=3.80cm,
+          xmin=0,xmax=9,ymin=0,ymax=95,
+          xtick={0,3,6,9},ytick={0,25,60,90},
+          xlabel={Time (min)},ylabel={Elevation (degrees)},
+          label style={font=\scriptsize},tick label style={font=\scriptsize},
+          axis line style={draw=Muted},tick style={draw=Muted},
+          ymajorgrids,grid style={Line,line width=0.3pt},
+          legend style={font=\tiny,draw=none,at={(0.5,-0.43)},anchor=north,legend columns=3,column sep=3pt},
+          clip=false]
+          \fill[Soft] (axis cs:3.756,0) rectangle (axis cs:5.244,95);
+          \addplot[Ink,line width=0.9pt] table[x=time,y=A,col sep=comma]{contact-windows.csv};
+          \addlegendentry{Satellite A}
+          \addplot[Muted,dashed,line width=0.9pt] table[x=time,y=B,col sep=comma]{contact-windows.csv};
+          \addlegendentry{Satellite B}
+          \addplot[Muted,densely dotted,line width=0.65pt,domain=0:9] {25};
+          \addlegendentry{$25^\circ$ mask}
+          \node[font=\tiny,anchor=south] at (axis cs:4.5,95) {Overlap};
+        \end{axis}
+      \end{tikzpicture}
+      \par\vspace{0.18cm}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \node[lab,draw=Line,fill=Soft,minimum height=0.45cm] (p) at (0,0) {Prepare link};
+        \node[lab,draw=Ink,minimum height=0.45cm] (s) at (2.3,0) {Switch};
+        \node[lab,draw=Line,minimum height=0.45cm] (r) at (4.4,0) {Release old link};
+        \draw[flow] (p) -- (s);
+        \draw[flow] (s) -- (r);
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Illustrative overhead passes at 550 km, peaking at 3 and 6 min. Earth rotation and handover overhead are omitted.}
+  \note{The CSV is calculated from circular-orbit geometry, not measurements. Let omega = sqrt(mu/(R+h) cubed), and theta = omega times seconds from overhead. Elevation is atan2((R+h) cos(theta)-R, (R+h) abs(sin(theta))). Values below zero are clipped for display. Each 25-degree contact extends about 2.244 minutes from overhead, so overlap is 3.756 to 5.244 minutes. This is an opportunity, not a handover policy.}
+\end{frame}
+
+% 9. Four delay components.
+\begin{frame}{Internet Latency Includes More Than Propagation}
+  \context{An end-to-end packet crosses several links and waits or is processed at intermediate nodes.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Signals take time to cross each link.}{
+          \item Radio travels at about 300,000 km/s in space. Light in fiber travels at about 200,000 km/s.}
+        \point{Packets also spend time at nodes.}{
+          \item Transmission takes packet length / link rate. Processing and queues add delay. Queueing varies with load.}
+        \point{RTT includes both directions.}{
+          \item Round-trip time is about twice the one-way delay only when both directions have similar paths and delays.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{A worked end-to-end delay budget}
+      {\scriptsize\renewcommand{\arraystretch}{1.12}
+      \begin{tabular}{@{}llr@{}}\toprule
+        \textbf{Contribution} & \textbf{What it counts} & \textbf{Total} \\ \midrule
+        Propagation & Distance / signal speed & 12 ms \\
+        Transmission & Packet length / link rate & 1 ms \\
+        Processing & Work done at nodes & 1 ms \\
+        Queueing & Wait before transmission & 6 ms \\ \bottomrule
+      \end{tabular}}
+      \par\vspace{0.23cm}
+      {\small\bfseries One way: $12+1+1+6=20$ ms}
+      \par\vspace{0.20cm}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (0,-1.1) rectangle (6.4,0.5);
+        \node[lab] at (0.5,0.26) {User};
+        \node[lab] at (5.9,0.26) {Server};
+        \draw[flow] (1.15,0.22) -- (5.18,0.22) node[midway,above=2pt,lab] {20 ms outbound};
+        \draw[flow] (5.18,-0.41) -- (1.15,-0.41) node[midway,above=2pt,lab] {20 ms return};
+        \node[lab,font=\footnotesize\bfseries] at (3.2,-0.96) {Symmetric example: RTT $\approx 40$ ms};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \assumption{Illustrative packet budget. Each contribution is already summed across the path. These are not measured service rates or delays.}
+  \note{The store-and-forward accounting sums distance over propagation speed and packet length over link rate, with node processing and queueing. Some systems overlap stages, so choose an explicit model. The four assumed contributions sum to 20 ms. A symmetric return produces about 40 ms RTT.}
+\end{frame}
+
+% 10. Connect the physical architecture to the simulator.
+\begin{frame}{Model the Network as a Changing Graph}
+  \context{At one instant, build the usable links first. Then choose a complete route through them.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}\raggedright
+      \begin{teachingpoints}
+        \point{Geometry determines usable links.}{
+          \item Nodes are satellites and ground endpoints. Links need visibility, range, and modeled equipment conditions.}
+        \point{The objective ranks complete paths.}{
+          \item Minimum hops counts links. Minimum propagation delay adds link delays. They can select different paths.}
+        \point{Time changes the graph and routes.}{
+          \item Motion or an outage can remove links. SatNet Edu models these changes, but omits radio capacity, queues, and handover signaling.}
+      \end{teachingpoints}
+    \end{column}
+    \begin{column}{0.49\textwidth}\centering
+      \figtitle{Fewer hops can still mean more delay}
+      \begin{tikzpicture}[x=1cm,y=1cm,scale=0.88,transform shape]
+        \path[use as bounding box] (-0.1,-1.90) rectangle (6.7,1.7);
+        \node[graphnode] (a) at (0.5,0) {A};
+        \node[graphnode] (s1) at (2.15,1.20) {S1};
+        \node[graphnode] (s2) at (2.05,-1.20) {S2};
+        \node[graphnode] (s3) at (3.95,-1.20) {S3};
+        \node[graphnode] (s4) at (5.15,0) {S4};
+        \node[graphnode] (b) at (6.42,0) {B};
+        \draw[net] (a) -- (s1) node[midway,weight] {4};
+        \draw[net] (s1) -- (s4) node[midway,weight] {8};
+        \draw[net] (s4) -- (b) node[midway,weight] {3};
+        \draw[net,dashed] (a) -- (s2) node[midway,weight] {3};
+        \draw[net,dashed] (s2) -- (s3) node[midway,weight] {3};
+        \draw[net,dashed] (s3) -- (s4) node[midway,weight] {3};
+        \node[smalllab,text=Muted] at (3.25,-1.72) {Link weights: one-way propagation delay in ms};
+      \end{tikzpicture}
+      {\scriptsize\renewcommand{\arraystretch}{1.08}
+      \begin{tabular}{@{}lcc@{}}\toprule
+        \textbf{Path} & \textbf{Hops} & \textbf{Delay} \\ \midrule
+        A--S1--S4--B & 3 & $4+8+3=15$ ms \\
+        A--S2--S3--S4--B & 4 & $3+3+3+3=12$ ms \\ \bottomrule
+      \end{tabular}}
+    \end{column}
+  \end{columns}
+  \assumption{Illustrative graph. A and B are ground endpoints, S1--S4 are satellites. Weights are a teaching example, not a physical constellation.}
+  \note{The upper path has three links and 15 ms. The lower path has four links and 12 ms. If A-S2 fails, the upper route remains. If both links from A fail, other ISLs cannot restore access for A. The simulator evaluates sampled topology snapshots and does not implement an operational handover protocol.}
+\end{frame}
+\end{document}

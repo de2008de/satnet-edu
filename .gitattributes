@@ -3,3 +3,5 @@ handoff/** -text
 *.png -text
 *.zip -text
 *.whl -text
+teaching/*.cmd text eol=crlf
+teaching/**/*.pdf -text

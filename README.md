@@ -64,6 +64,13 @@ Already have a recording? Open [the standalone player](web/demo/index.html) loca
 and import your JSON file. To add playback to a website, see the
 [embedding guide](docs/API.md#embedding) and [two-player example](web/demo/two-players.html).
 
+## Learn satellite networking
+
+[Lecture 01: Satellite Network Architecture](teaching/lecture-01/README.md) introduces
+the path from a user terminal to the Internet, with explanatory diagrams and worked
+examples of coverage, capacity, handover, and delay. Download the [slides](teaching/lecture-01/lecture-01.pdf)
+or adapt the [LaTeX Beamer source](teaching/lecture-01/main.tex) for your course.
+
 ## Documentation
 
 [Python API](docs/API.md) · [Simulation model](docs/MODEL.md) · [Trace format](docs/TRACE_FORMAT.md)
