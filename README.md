@@ -95,3 +95,10 @@ Beamer sources, instructor notes, and companion experiments, see the
 *Commercial Dishes Can Be My Ladder: Sustainable and Collaborative Data Offloading
 in LEO Satellite Networks*. IEEE INFOCOM 2025.
 [Paper](https://doi.org/10.1109/INFOCOM55648.2025.11044527).
+
+## About the creator
+
+SatNet Edu is created by [Yi Ching Chou (David Chou)](https://ycchou.com), an
+educator and researcher working on sustainable space computing, resilient
+satellite networking, and computing education. Visit
+[ycchou.com](https://ycchou.com) for his research, publications, and teaching.
