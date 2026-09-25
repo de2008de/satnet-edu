@@ -1,7 +1,7 @@
 # Lecture 01: Satellite Network Architecture
 
 An introduction to LEO satellite networking, following a packet from a user
-terminal through space and ground infrastructure to a server. Worked examples
+terminal through space and ground infrastructure to a server. Examples
 connect orbital geometry to the network behavior a user experiences.
 
 [View the slides (PDF)](lecture-01.pdf) · [Edit the Beamer source](main.tex)
